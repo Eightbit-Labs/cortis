@@ -111,7 +111,16 @@ function normalizeSelection(current, bootstrap) {
   return next
 }
 
-function ProfileCard({ profile, isSelf, bioDraft, onBioDraftChange, onBioSave }) {
+function ProfileCard({
+  profile,
+  isSelf,
+  bioDraft,
+  onBioDraftChange,
+  onBioSave,
+  settingsDraft,
+  onSettingsChange,
+  onSettingsSave,
+}) {
   return (
     <section className="profile-card">
       <div className="profile-hero">
@@ -130,19 +139,74 @@ function ProfileCard({ profile, isSelf, bioDraft, onBioDraftChange, onBioSave })
       </div>
 
       {isSelf ? (
-        <form className="bio-editor" onSubmit={onBioSave}>
-          <div className="section-heading">
-            <h3>Edit Bio</h3>
-            <span>{bioDraft.length}/200</span>
-          </div>
-          <textarea
-            value={bioDraft}
-            maxLength={200}
-            onChange={(event) => onBioDraftChange(event.target.value)}
-            placeholder="Write Markdown here. Example: **building** a calmer chat client."
-          />
-          <button type="submit">Save bio</button>
-        </form>
+        <>
+          <form className="bio-editor" onSubmit={onBioSave}>
+            <div className="section-heading">
+              <h3>Edit Bio</h3>
+              <span>{bioDraft.length}/200</span>
+            </div>
+            <textarea
+              value={bioDraft}
+              maxLength={200}
+              onChange={(event) => onBioDraftChange(event.target.value)}
+              placeholder="Write Markdown here. Example: **building** a calmer chat client."
+            />
+            <button type="submit">Save bio</button>
+          </form>
+
+          <form className="bio-editor" onSubmit={onSettingsSave}>
+            <div className="section-heading">
+              <h3>Account settings</h3>
+              <span>Update your profile and login credentials</span>
+            </div>
+            <label>
+              Display name
+              <input
+                value={settingsDraft.displayName}
+                onChange={(event) => onSettingsChange('displayName', event.target.value)}
+                placeholder="Pixel Lavender"
+                required
+              />
+            </label>
+            <label>
+              Username
+              <input
+                value={settingsDraft.username}
+                onChange={(event) => onSettingsChange('username', event.target.value.toLowerCase())}
+                placeholder="pixel_lavender"
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={settingsDraft.password}
+                onChange={(event) => onSettingsChange('password', event.target.value)}
+                placeholder="At least 6 characters"
+                minLength={6}
+                required
+              />
+            </label>
+            <fieldset className="avatar-picker">
+              <legend>Profile picture</legend>
+              <div className="avatar-grid">
+                {AVATAR_PRESETS.map((preset) => (
+                  <button
+                    type="button"
+                    key={preset.key}
+                    className={settingsDraft.avatarKey === preset.key ? 'avatar-choice active' : 'avatar-choice'}
+                    onClick={() => onSettingsChange('avatarKey', preset.key)}
+                  >
+                    <Avatar avatarKey={preset.key} label={preset.key} />
+                    <span>{preset.key}</span>
+                  </button>
+                ))}
+              </div>
+            </fieldset>
+            <button type="submit">Save settings</button>
+          </form>
+        </>
       ) : null}
     </section>
   )
@@ -167,7 +231,14 @@ function AuthScreen({
       <section className="auth-hero">
         <div className="hero-panel">
           <p className="hero-kicker">cortis</p>
-          <h1>Messaging with a Vim shell, not Vim controls.</h1>
+          <h1 className="hero-code">
+            <span className="code-ident">console</span>
+            <span className="code-punct">.</span>
+            <span className="code-call">log</span>
+            <span className="code-punct">(</span>
+            <span className="code-string">"finally, a chat app that gets it"</span>
+            <span className="code-punct">)</span>
+          </h1>
           <p className="hero-copy">
             Standard buttons, standard forms, normal scrolling. The visual language borrows from Vim splits,
             tabs, and status lines without hijacking the browser.
@@ -325,6 +396,12 @@ function App() {
   const [inviteFriendId, setInviteFriendId] = useState('')
   const [draftMessage, setDraftMessage] = useState('')
   const [bioDraft, setBioDraft] = useState('')
+  const [settingsDraft, setSettingsDraft] = useState({
+    displayName: '',
+    username: '',
+    password: '',
+    avatarKey: AVATAR_PRESETS[0].key,
+  })
   const socketRef = useRef(null)
   const noticeTimeoutRef = useRef(null)
 
@@ -345,7 +422,15 @@ function App() {
     startTransition(() => {
       setSnapshot(nextBootstrap)
     })
-    setBioDraft(nextBootstrap.user?.bio ?? '')
+    const currentUser = nextBootstrap.user ?? {}
+    setBioDraft(currentUser.bio ?? '')
+    setSettingsDraft((current) => ({
+      ...current,
+      displayName: currentUser.displayName ?? '',
+      username: currentUser.username ?? '',
+      avatarKey: currentUser.avatarKey ?? AVATAR_PRESETS[0].key,
+      password: '',
+    }))
     setSelection((current) => normalizeSelection(current, nextBootstrap))
   }
 
@@ -653,6 +738,28 @@ function App() {
   async function handleSaveBio(event) {
     event.preventDefault()
     await submitAction('/api/users/bio', 'POST', { userId: session.userId, bio: bioDraft }, 'Profile updated.')
+  }
+
+  async function handleSaveSettings(event) {
+    event.preventDefault()
+    const data = await submitAction(
+      '/api/users/settings',
+      'POST',
+      {
+        userId: session.userId,
+        displayName: settingsDraft.displayName,
+        username: settingsDraft.username,
+        password: settingsDraft.password,
+        avatarKey: settingsDraft.avatarKey,
+      },
+      'Settings saved.',
+    )
+
+    if (data?.session) {
+      setLoginUsername(data.session.username)
+      setLoginPassword('')
+      setSettingsDraft((current) => ({ ...current, password: '' }))
+    }
   }
 
   function handleSendMessage(event) {
@@ -1216,6 +1323,9 @@ function App() {
               bioDraft={bioDraft}
               onBioDraftChange={setBioDraft}
               onBioSave={handleSaveBio}
+              settingsDraft={settingsDraft}
+              onSettingsChange={(field, value) => setSettingsDraft((current) => ({ ...current, [field]: value }))}
+              onSettingsSave={handleSaveSettings}
             />
           ) : null}
         </main>

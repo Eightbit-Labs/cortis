@@ -528,6 +528,50 @@ app.post('/api/users/bio', (req, res) => {
   return okWithBootstrap(res, user.id)
 })
 
+app.post('/api/users/settings', (req, res) => {
+  const user = getUser(req.body.userId)
+  const displayName = String(req.body.displayName || '').trim()
+  const username = String(req.body.username || '').trim().toLowerCase()
+  const password = String(req.body.password || '')
+  const avatarKey = String(req.body.avatarKey || '').trim()
+
+  if (!user) {
+    return reject(res, 'User not found.', 404)
+  }
+
+  if (!displayName || !username || !password || !avatarKey) {
+    return reject(res, 'Display name, username, password, and profile picture are required.')
+  }
+
+  if (!ensureUsername(username)) {
+    return reject(res, 'Username must be 3-20 characters using letters, numbers, or underscores.')
+  }
+
+  if (password.length < 6) {
+    return reject(res, 'Password must be at least 6 characters.')
+  }
+
+  if (!ensureAvatarKey(avatarKey)) {
+    return reject(res, 'Choose one of the built-in profile pictures.')
+  }
+
+  const existing = getUserByUsername(username)
+  if (existing && existing.id !== user.id) {
+    return reject(res, 'That username is already taken.')
+  }
+
+  user.displayName = displayName
+  user.username = username
+  user.password = password
+  user.avatarKey = avatarKey
+
+  emitStateChange([user.id, ...user.friends])
+  return res.json({
+    session: { userId: user.id, username: user.username },
+    bootstrap: buildBootstrap(user.id),
+  })
+})
+
 app.post('/api/friends/request', (req, res) => {
   const user = getUser(req.body.userId)
   const target = getUserByUsername(String(req.body.username || '').trim().toLowerCase())
