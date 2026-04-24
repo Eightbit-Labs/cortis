@@ -30,31 +30,37 @@ app.use(cors({ origin: allowedOrigins }))
 app.use(express.json())
 
 const socketsByUser = new Map()
-const state = createSeedState()
+let state
+state = createSeedState()
 
 function createSeedState() {
-  const data = {
+  let data = {
     nextId: 10,
     users: [],
     servers: [],
     dms: [],
     groups: [],
   }
+  // Assign early so helper functions (getUser, ensureDm, etc.) can reference state
+  state = data
 
   const neo = makeUser(data, {
     username: 'neo',
+    password: 'demo123',
     displayName: 'Neo Split',
     avatarKey: 'amber-fox',
     bio: 'Writes release notes in Markdown and pings **@everyone** when builds land.',
   })
   const gwen = makeUser(data, {
     username: 'gwen',
+    password: 'demo123',
     displayName: 'Gwen Buffer',
     avatarKey: 'teal-crane',
     bio: 'Calm moderator. Loves channel hygiene and readable threads.',
   })
   const mori = makeUser(data, {
     username: 'mori',
+    password: 'demo123',
     displayName: 'Mori Tabs',
     avatarKey: 'rose-koi',
     bio: 'Sketches UI ideas between commits. _Prefers structured chaos._',
@@ -112,10 +118,11 @@ function createSeedState() {
   return data
 }
 
-function makeUser(data, { username, displayName, avatarKey, bio }) {
+function makeUser(data, { username, password, displayName, avatarKey, bio }) {
   const user = {
     id: nextId(data, 'user'),
     username,
+    password,
     displayName,
     avatarKey,
     bio,
@@ -433,14 +440,19 @@ app.get('/api/public/users', (_req, res) => {
 app.post('/api/auth/signup', (req, res) => {
   const displayName = String(req.body.displayName || '').trim()
   const username = String(req.body.username || '').trim().toLowerCase()
+  const password = String(req.body.password || '')
   const avatarKey = String(req.body.avatarKey || '').trim()
 
-  if (!displayName || !username || !avatarKey) {
-    return reject(res, 'Display name, username, and profile picture are required.')
+  if (!displayName || !username || !password || !avatarKey) {
+    return reject(res, 'Display name, username, password, and profile picture are required.')
   }
 
   if (!ensureUsername(username)) {
     return reject(res, 'Username must be 3-20 characters using letters, numbers, or underscores.')
+  }
+
+  if (password.length < 6) {
+    return reject(res, 'Password must be at least 6 characters.')
   }
 
   if (!ensureAvatarKey(avatarKey)) {
@@ -453,6 +465,7 @@ app.post('/api/auth/signup', (req, res) => {
 
   const user = makeUser(state, {
     username,
+    password,
     displayName,
     avatarKey,
     bio: '',
@@ -466,10 +479,19 @@ app.post('/api/auth/signup', (req, res) => {
 
 app.post('/api/auth/login', (req, res) => {
   const username = String(req.body.username || '').trim().toLowerCase()
+  const password = String(req.body.password || '')
   const user = getUserByUsername(username)
 
   if (!user) {
     return reject(res, 'Unknown username.')
+  }
+
+  if (!password) {
+    return reject(res, 'Password is required.')
+  }
+
+  if (user.password !== password) {
+    return reject(res, 'Incorrect password.')
   }
 
   return res.json({

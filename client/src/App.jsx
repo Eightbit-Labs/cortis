@@ -152,10 +152,12 @@ function AuthScreen({
   authMode,
   createForm,
   demoUsers,
+  loginPassword,
   loginUsername,
   onAuthModeChange,
   onCreateChange,
   onCreateSubmit,
+  onLoginPasswordChange,
   onLoginChange,
   onLoginSubmit,
   onQuickLogin,
@@ -216,6 +218,17 @@ function AuthScreen({
                 required
               />
             </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={createForm.password}
+                onChange={(event) => onCreateChange('password', event.target.value)}
+                placeholder="At least 6 characters"
+                minLength={6}
+                required
+              />
+            </label>
             <fieldset className="avatar-picker">
               <legend>Profile picture</legend>
               <div className="avatar-grid">
@@ -242,6 +255,16 @@ function AuthScreen({
                 value={loginUsername}
                 onChange={(event) => onLoginChange(event.target.value.toLowerCase())}
                 placeholder="neo"
+                required
+              />
+            </label>
+            <label>
+              Password
+              <input
+                type="password"
+                value={loginPassword}
+                onChange={(event) => onLoginPasswordChange(event.target.value)}
+                placeholder="Your password"
                 required
               />
             </label>
@@ -283,9 +306,11 @@ function App() {
   const [notice, setNotice] = useState('Ready.')
   const [authMode, setAuthMode] = useState('signup')
   const [loginUsername, setLoginUsername] = useState('')
+  const [loginPassword, setLoginPassword] = useState('')
   const [createForm, setCreateForm] = useState({
     displayName: '',
     username: '',
+    password: '',
     avatarKey: AVATAR_PRESETS[0].key,
   })
   const [selection, setSelection] = useState(EMPTY_SELECTION)
@@ -484,22 +509,31 @@ function App() {
     if (data?.session) {
       setSelection(EMPTY_SELECTION)
       setAuthMode('login')
+      setLoginUsername(createForm.username)
+      setLoginPassword('')
+      setCreateForm((current) => ({ ...current, password: '' }))
     }
   }
 
   async function handleLogin(event) {
     event.preventDefault()
-    const data = await submitAction('/api/auth/login', 'POST', { username: loginUsername }, 'Logged in.')
+    const data = await submitAction(
+      '/api/auth/login',
+      'POST',
+      { username: loginUsername, password: loginPassword },
+      'Logged in.',
+    )
     if (data?.session) {
       setSelection(EMPTY_SELECTION)
+      setLoginPassword('')
     }
   }
 
   async function handleQuickLogin(username) {
-    const data = await submitAction('/api/auth/login', 'POST', { username }, `Logged in as @${username}.`)
-    if (data?.session) {
-      setSelection(EMPTY_SELECTION)
-    }
+    setAuthMode('login')
+    setLoginUsername(username)
+    setLoginPassword('')
+    setFlash(`Username @${username} filled. Enter password to log in.`)
   }
 
   async function handleSendFriendRequest(event) {
@@ -640,6 +674,7 @@ function App() {
     applySession(null, null)
     setSelection(EMPTY_SELECTION)
     setLoginUsername('')
+    setLoginPassword('')
     setFlash('Logged out.')
   }
 
@@ -675,10 +710,12 @@ function App() {
         authMode={authMode}
         createForm={createForm}
         demoUsers={demoUsers}
+        loginPassword={loginPassword}
         loginUsername={loginUsername}
         onAuthModeChange={setAuthMode}
         onCreateChange={(field, value) => setCreateForm((current) => ({ ...current, [field]: value }))}
         onCreateSubmit={handleCreateAccount}
+        onLoginPasswordChange={setLoginPassword}
         onLoginChange={setLoginUsername}
         onLoginSubmit={handleLogin}
         onQuickLogin={handleQuickLogin}
@@ -783,7 +820,7 @@ function App() {
           {selection.section === 'servers' ? (
             <>
               <div className="pane-header">
-                <h2>{currentServer?.name ?? 'No server yet'}</h2>
+                <h2>{currentServer?.name ?? 'No servers yet'}</h2>
                 <p>{currentServer ? `${currentServer.members.length} members` : 'Create a server to begin.'}</p>
               </div>
 
