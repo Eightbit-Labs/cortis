@@ -1,0 +1,63 @@
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Space+Grotesk:wght@400;500;700&display=swap');
+
+:root {
+  --bg: #101513;
+  --bg-panel: rgba(14, 24, 21, 0.92);
+  --bg-soft: rgba(23, 34, 31, 0.88);
+  --bg-code: #16221e;
+  --line: #28433b;
+  --line-strong: #3f6658;
+  --text: #d7e9de;
+  --muted: #93b4a5;
+  --heading: #f3fff9;
+  --accent: #94f07f;
+  --accent-soft: rgba(148, 240, 127, 0.14);
+  --danger: #ff6b6b;
+  --danger-soft: rgba(255, 107, 107, 0.16);
+  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --mono: 'IBM Plex Mono', monospace;
+  --display: 'Space Grotesk', sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at top left, rgba(148, 240, 127, 0.14), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(244, 178, 103, 0.12), transparent 28%),
+    linear-gradient(180deg, #0d110f 0%, #111917 100%);
+  font-family: var(--mono);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+a {
+  color: inherit;
+}
+
+#root {
+  min-height: 100vh;
+}
