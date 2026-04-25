@@ -886,9 +886,9 @@ function App() {
                 section: 'messages',
                 messageMode: current.messageMode || 'dms',
               }))
-            }
-          >
-            cv
+            } // text below will be replaced by logo
+          > 
+            cv 
             {socialTabBadge ? <span className="ping-dot">{socialTabBadge}</span> : null}
           </button>
           {snapshot.servers.map((server) => {
@@ -917,23 +917,7 @@ function App() {
           <div className="rail-bottom">
             {renderServerCreateForm()}
 
-            <button
-              type="button"
-              className="rail-userplate"
-              onClick={() =>
-                setSelection((current) => ({
-                  ...current,
-                  section: 'profile',
-                  profileUsername: snapshot.user.username,
-                }))
-              }
-            >
-              <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} size="sm" />
-              <span>
-                {snapshot.user.displayName}
-                <strong>@{snapshot.user.username}</strong>
-              </span>
-            </button>
+           
           </div>
         </aside>
 
@@ -1012,23 +996,8 @@ function App() {
           {selection.section === 'messages' ? (
             <>
               <div className="pane-header">
-                <h2>Message Buffers</h2>
-                <div className="subtabs">
-                  <button
-                    type="button"
-                    className={selection.messageMode === 'dms' ? 'is-active' : ''}
-                    onClick={() => setSelection((current) => ({ ...current, messageMode: 'dms' }))}
-                  >
-                    DMs
-                  </button>
-                  <button
-                    type="button"
-                    className={selection.messageMode === 'groups' ? 'is-active' : ''}
-                    onClick={() => setSelection((current) => ({ ...current, messageMode: 'groups' }))}
-                  >
-                    Groups
-                  </button>
-                </div>
+                <h2>Direct Messages</h2>
+
               </div>
 
               {selection.messageMode === 'dms' ? (
