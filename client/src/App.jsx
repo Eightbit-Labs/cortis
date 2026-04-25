@@ -833,25 +833,7 @@ function App() {
   function renderServerCreateForm(className = 'rail-create') {
     return (
       <form className={className} onSubmit={handleCreateServer}>
-        <input
-          value={serverForm.name}
-          onChange={(event) => setServerForm((current) => ({ ...current, name: event.target.value }))}
-          placeholder=":new-server"
-          required
-        />
-        <div className="mini-avatar-grid">
-          {AVATAR_PRESETS.slice(0, 4).map((preset) => (
-            <button
-              type="button"
-              key={preset.key}
-              className={serverForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
-              onClick={() => setServerForm((current) => ({ ...current, avatarKey: preset.key }))}
-            >
-              <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
-            </button>
-          ))}
-        </div>
-        <button type="submit">Create</button>
+        <button type="submit">+</button>
       </form>
     )
   }
