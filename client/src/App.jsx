@@ -258,13 +258,12 @@ function AuthScreen({
             <span className="code-punct">)</span>
           </h1>
           <p className="hero-copy">
-            Standard buttons, standard forms, normal scrolling. The visual language borrows from Vim splits,
-            tabs, and status lines without hijacking the browser.
+            Say hello to Cortis, a chat client built for developers, by developers. But what sets Cortis apart?
           </p>
           <ul className="hero-list">
-            <li>Servers with channels, invites, unread ping badges, and owner-only posting permissions.</li>
-            <li>Direct messages, friend requests by username, and capped group chats up to 10 members.</li>
-            <li>Profile pages with Markdown bios and clickable member nameplates.</li>
+            <li>Built in Github bot so that you can know the second someone pushes code.</li>
+            <li>CD status notifications (your pipeline says thanks)</li>
+            <li>Github style contributions tracking</li>
           </ul>
         </div>
       </section>
@@ -276,14 +275,14 @@ function AuthScreen({
             className={authMode === 'signup' ? 'is-active' : ''}
             onClick={() => onAuthModeChange('signup')}
           >
-            :signup
+            Sign Up
           </button>
           <button
             type="button"
             className={authMode === 'login' ? 'is-active' : ''}
             onClick={() => onAuthModeChange('login')}
           >
-            :login
+            Log In
           </button>
         </div>
 
@@ -294,7 +293,7 @@ function AuthScreen({
               <input
                 value={createForm.displayName}
                 onChange={(event) => onCreateChange('displayName', event.target.value)}
-                placeholder="Pixel Lavender"
+                placeholder="Buy BTF"
                 required
               />
             </label>
@@ -303,7 +302,7 @@ function AuthScreen({
               <input
                 value={createForm.username}
                 onChange={(event) => onCreateChange('username', event.target.value.toLowerCase())}
-                placeholder="pixel_lavender"
+                placeholder="buy_btf"
                 required
               />
             </label>
@@ -327,7 +326,7 @@ function AuthScreen({
               <input
                 value={loginUsername}
                 onChange={(event) => onLoginChange(event.target.value.toLowerCase())}
-                placeholder="neo"
+                placeholder="buy_btf"
                 required
               />
             </label>
@@ -347,23 +346,7 @@ function AuthScreen({
 
         {authError ? <p className="auth-error">{authError}</p> : null}
 
-        <div className="demo-users">
-          <div className="section-heading">
-            <h3>Demo users</h3>
-            <span>Password: {DEMO_PASSWORD}</span>
-          </div>
-          <div className="demo-user-list">
-            {demoUsers.map((user) => (
-              <button type="button" key={user.id} onClick={() => onQuickLogin(user.username)}>
-                <Avatar label={user.displayName} imageUrl={user.avatarImage} />
-                <span>
-                  {user.displayName}
-                  <strong>@{user.username}</strong>
-                </span>
-              </button>
-            ))}
-          </div>
-        </div>
+        
       </section>
     </div>
   )

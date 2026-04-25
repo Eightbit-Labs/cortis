@@ -568,10 +568,14 @@
 }
 
 .hero-kicker {
-  color: #7de6d8;
-  letter-spacing: 0.2em;
+  margin: 0 0 10px;
+  color: #86f0d8;
+  font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  text-shadow: 0 0 16px rgba(125, 230, 216, 0.35);
+  text-shadow: 0 0 12px rgba(125, 230, 216, 0.25);
 }
 
 .hero-panel h1 {
@@ -583,48 +587,56 @@
 .hero-panel .hero-code {
   margin: 0 0 18px;
   font-family: var(--mono);
-  font-size: clamp(1.08rem, 2.2vw, 1.62rem);
-  font-weight: 600;
-  line-height: 1.32;
-  letter-spacing: 0.01em;
+  font-size: clamp(1.12rem, 2.3vw, 1.72rem);
+  font-weight: 700;
+  line-height: 1.28;
+  letter-spacing: 0.006em;
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.02em;
+  padding: 12px 14px;
+  border: 1px solid rgba(168, 255, 227, 0.3);
+  border-radius: 8px;
+  background: linear-gradient(120deg, rgba(6, 12, 11, 0.92), rgba(15, 30, 28, 0.9));
+  box-shadow: 0 0 0 1px rgba(128, 255, 214, 0.12) inset, 0 14px 32px rgba(0, 0, 0, 0.3);
 }
 
 .hero-panel .hero-code .code-ident {
-  color: #8ce8ff;
+  color: #e9fff8;
 }
 
 .hero-panel .hero-code .code-call {
-  color: #a8ffb5;
+  color: #cbffef;
 }
 
 .hero-panel .hero-code .code-string {
-  color: #ffd57f;
+  color: #b7fbe4;
+  opacity: 0.95;
 }
 
 .hero-panel .hero-code .code-punct {
-  color: #d8f4ee;
-}
-
-.hero-panel .hero-code code {
-  display: inline-block;
-  padding: 10px 12px;
-  border: 1px solid rgba(141, 226, 255, 0.4);
-  background: linear-gradient(120deg, rgba(7, 14, 13, 0.88), rgba(17, 33, 31, 0.9));
-  color: #9cefd7;
-  border-color: rgba(141, 226, 255, 0.4);
-  text-shadow: 0 0 12px rgba(156, 239, 215, 0.22), 0 0 4px rgba(131, 199, 255, 0.18);
-  box-shadow: 0 0 0 1px rgba(139, 246, 207, 0.15) inset, 0 10px 24px rgba(0, 0, 0, 0.22);
-  border-radius: 6px;
-  white-space: normal;
-  word-break: break-word;
+  color: #9ecbbd;
 }
 
 .hero-copy {
-  color: #c7ece1;
+  max-width: 60ch;
+  margin: 0;
+  color: #dcf7ef;
+  font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(1.02rem, 1.2vw, 1.16rem);
+  font-weight: 500;
+  letter-spacing: 0.012em;
+  line-height: 1.65;
 }
 
 .hero-list li {
-  color: #b8d8ff;
+  color: #d9e9ff;
+  font-family: "Space Grotesk", "Manrope", "Segoe UI", sans-serif;
+  font-size: clamp(0.98rem, 1vw, 1.08rem);
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.5;
 }
 
 .hero-list li::marker {
@@ -634,8 +646,9 @@
 .hero-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  padding-left: 18px;
+  gap: 14px;
+  margin: 16px 0 0;
+  padding-left: 22px;
   color: var(--muted);
 }
 
