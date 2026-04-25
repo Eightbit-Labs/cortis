@@ -7,15 +7,7 @@ const { Server } = require('socket.io')
 
 const PORT = Number(process.env.PORT || 3001)
 const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*'
-const AVATAR_KEYS = [
-  'amber-fox',
-  'teal-crane',
-  'rose-koi',
-  'ink-wolf',
-  'lime-gecko',
-  'sunset-moth',
-]
-
+const AVATAR_KEYS = ['amber-fox', 'teal-crane', 'rose-koi', 'ink-wolf', 'lime-gecko', 'sunset-moth']
 const app = express()
 const server = http.createServer(app)
 const allowedOrigins = CLIENT_ORIGIN === '*' ? true : CLIENT_ORIGIN.split(',').map((item) => item.trim())
@@ -48,21 +40,18 @@ function createSeedState() {
     username: 'neo',
     password: 'demo123',
     displayName: 'Neo Split',
-    avatarKey: 'amber-fox',
     bio: 'Writes release notes in Markdown and pings **@everyone** when builds land.',
   })
   const gwen = makeUser(data, {
     username: 'gwen',
     password: 'demo123',
     displayName: 'Gwen Buffer',
-    avatarKey: 'teal-crane',
     bio: 'Calm moderator. Loves channel hygiene and readable threads.',
   })
   const mori = makeUser(data, {
     username: 'mori',
     password: 'demo123',
     displayName: 'Mori Tabs',
-    avatarKey: 'rose-koi',
     bio: 'Sketches UI ideas between commits. _Prefers structured chaos._',
   })
 
@@ -118,13 +107,13 @@ function createSeedState() {
   return data
 }
 
-function makeUser(data, { username, password, displayName, avatarKey, bio }) {
+function makeUser(data, { username, password, displayName, bio }) {
   const user = {
     id: nextId(data, 'user'),
     username,
     password,
     displayName,
-    avatarKey,
+    avatarImage: '',
     bio,
     friends: [],
     incomingFriendRequests: [],
@@ -169,7 +158,7 @@ function userProfile(userId) {
     id: user.id,
     username: user.username,
     displayName: user.displayName,
-    avatarKey: user.avatarKey,
+    avatarImage: user.avatarImage,
     bio: user.bio,
   }
 }
@@ -421,16 +410,16 @@ function okWithBootstrap(res, userId, extra = {}) {
   res.json({ ...extra, bootstrap: buildBootstrap(userId) })
 }
 
-function ensureAvatarKey(avatarKey) {
-  return AVATAR_KEYS.includes(avatarKey)
+function ensureAvatarKey(value) {
+  return AVATAR_KEYS.includes(value)
 }
 
 function ensureUsername(value) {
   return /^[a-z0-9_]{3,20}$/.test(value)
 }
 
-function reject(res, message, status = 400) {
-  res.status(status).json({ message })
+function reject(res, message, status = 400, code = 'BAD_REQUEST') {
+  res.status(status).json({ message, code, status })
 }
 
 app.get('/api/public/users', (_req, res) => {
@@ -441,33 +430,27 @@ app.post('/api/auth/signup', (req, res) => {
   const displayName = String(req.body.displayName || '').trim()
   const username = String(req.body.username || '').trim().toLowerCase()
   const password = String(req.body.password || '')
-  const avatarKey = String(req.body.avatarKey || '').trim()
 
-  if (!displayName || !username || !password || !avatarKey) {
-    return reject(res, 'Display name, username, password, and profile picture are required.')
+  if (!displayName || !username || !password) {
+    return reject(res, 'Display name, username, and password are required.', 400, 'AUTH_SIGNUP_FIELDS_REQUIRED')
   }
 
   if (!ensureUsername(username)) {
-    return reject(res, 'Username must be 3-20 characters using letters, numbers, or underscores.')
+    return reject(res, 'Username must be 3-20 characters using letters, numbers, or underscores.', 400, 'AUTH_SIGNUP_USERNAME_INVALID')
   }
 
   if (password.length < 6) {
-    return reject(res, 'Password must be at least 6 characters.')
-  }
-
-  if (!ensureAvatarKey(avatarKey)) {
-    return reject(res, 'Choose one of the built-in profile pictures.')
+    return reject(res, 'Password must be at least 6 characters.', 400, 'AUTH_SIGNUP_PASSWORD_SHORT')
   }
 
   if (getUserByUsername(username)) {
-    return reject(res, 'That username is already taken.')
+    return reject(res, 'That username is already taken.', 400, 'AUTH_SIGNUP_USERNAME_TAKEN')
   }
 
   const user = makeUser(state, {
     username,
     password,
     displayName,
-    avatarKey,
     bio: '',
   })
 
@@ -483,15 +466,15 @@ app.post('/api/auth/login', (req, res) => {
   const user = getUserByUsername(username)
 
   if (!user) {
-    return reject(res, 'Unknown username.')
+    return reject(res, 'Unknown username.', 400, 'AUTH_UNKNOWN_USERNAME')
   }
 
   if (!password) {
-    return reject(res, 'Password is required.')
+    return reject(res, 'Password is required.', 400, 'AUTH_PASSWORD_REQUIRED')
   }
 
   if (user.password !== password) {
-    return reject(res, 'Incorrect password.')
+    return reject(res, 'Incorrect password.', 400, 'AUTH_INCORRECT_PASSWORD')
   }
 
   return res.json({
@@ -533,14 +516,14 @@ app.post('/api/users/settings', (req, res) => {
   const displayName = String(req.body.displayName || '').trim()
   const username = String(req.body.username || '').trim().toLowerCase()
   const password = String(req.body.password || '')
-  const avatarKey = String(req.body.avatarKey || '').trim()
+  const avatarImage = String(req.body.avatarImage || '')
 
   if (!user) {
     return reject(res, 'User not found.', 404)
   }
 
-  if (!displayName || !username || !password || !avatarKey) {
-    return reject(res, 'Display name, username, password, and profile picture are required.')
+  if (!displayName || !username || !password) {
+    return reject(res, 'Display name, username, and password are required.')
   }
 
   if (!ensureUsername(username)) {
@@ -551,8 +534,8 @@ app.post('/api/users/settings', (req, res) => {
     return reject(res, 'Password must be at least 6 characters.')
   }
 
-  if (!ensureAvatarKey(avatarKey)) {
-    return reject(res, 'Choose one of the built-in profile pictures.')
+  if (avatarImage && (!avatarImage.startsWith('data:image/') || avatarImage.length > 1_500_000)) {
+    return reject(res, 'Profile picture must be an image under 1MB.')
   }
 
   const existing = getUserByUsername(username)
@@ -563,7 +546,7 @@ app.post('/api/users/settings', (req, res) => {
   user.displayName = displayName
   user.username = username
   user.password = password
-  user.avatarKey = avatarKey
+  user.avatarImage = avatarImage
 
   emitStateChange([user.id, ...user.friends])
   return res.json({

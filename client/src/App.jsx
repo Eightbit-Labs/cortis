@@ -6,6 +6,7 @@ import './App.css'
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? API_URL
 const SESSION_KEY = 'cortis.session'
+const DEMO_PASSWORD = 'demo123'
 
 const AVATAR_PRESETS = [
   { key: 'amber-fox', glyph: '', tone: 'amber' },
@@ -30,13 +31,13 @@ function presetForAvatar(avatarKey) {
   return AVATAR_PRESETS.find((preset) => preset.key === avatarKey) ?? AVATAR_PRESETS[0]
 }
 
-function Avatar({ avatarKey, label, size = 'md' }) {
-  const preset = presetForAvatar(avatarKey)
+function Avatar({ avatarKey, label, size = 'md', imageUrl }) {
+  const preset = avatarKey ? presetForAvatar(avatarKey) : AVATAR_PRESETS[label?.charCodeAt(0) % AVATAR_PRESETS.length || 0]
+  const glyph = avatarKey ? preset.glyph : (label?.trim()?.slice(0, 1) || '?').toUpperCase()
 
   return (
     <div className={`avatar avatar-${size} tone-${preset.tone}`} aria-hidden="true">
-      <span>{preset.glyph}</span>
-      <span className="avatar-ring">{label?.slice(0, 1) ?? ''}</span>
+      {imageUrl ? <img src={imageUrl} alt="" className="avatar-image" /> : <span>{glyph}</span>}
     </div>
   )
 }
@@ -52,21 +53,47 @@ function VimFiller({ lines = 10 }) {
 }
 
 async function apiRequest(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
-    headers: {
-      'Content-Type': 'application/json',
-      ...(options.headers ?? {}),
-    },
-    ...options,
-  })
+  const method = options.method ?? 'GET'
+  let response
+
+  try {
+    response = await fetch(`${API_URL}${path}`, {
+      headers: {
+        'Content-Type': 'application/json',
+        ...(options.headers ?? {}),
+      },
+      ...options,
+    })
+  } catch (_error) {
+    throw new Error(`${method} ${path} failed: Network error. Is API running at ${API_URL}?`)
+  }
 
   const data = await response.json().catch(() => ({ message: 'Unexpected server response.' }))
 
   if (!response.ok) {
-    throw new Error(data.message ?? 'Request failed.')
+    const code = data.code ? ` ${data.code}` : ''
+    const message = data.message ?? 'Request failed.'
+    console.error('API request failed', {
+      method,
+      path,
+      status: response.status,
+      code: data.code ?? null,
+      message,
+      payload: data,
+    })
+    throw new Error(`${method} ${path} failed (${response.status}${code}): ${message}`)
   }
 
   return data
+}
+
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve(String(reader.result || ''))
+    reader.onerror = () => reject(new Error('Could not read the selected file.'))
+    reader.readAsDataURL(file)
+  })
 }
 
 function sumUnread(items) {
@@ -120,11 +147,12 @@ function ProfileCard({
   settingsDraft,
   onSettingsChange,
   onSettingsSave,
+  onSettingsAvatarUpload,
 }) {
   return (
     <section className="profile-card">
       <div className="profile-hero">
-        <Avatar avatarKey={profile.avatarKey} label={profile.displayName} size="xl" />
+        <Avatar label={profile.displayName} imageUrl={profile.avatarImage} size="xl" />
         <div>
           <h2>{profile.displayName}</h2>
           <p className="profile-username">@{profile.username}</p>
@@ -188,22 +216,11 @@ function ProfileCard({
                 required
               />
             </label>
-            <fieldset className="avatar-picker">
-              <legend>Profile picture</legend>
-              <div className="avatar-grid">
-                {AVATAR_PRESETS.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.key}
-                    className={settingsDraft.avatarKey === preset.key ? 'avatar-choice active' : 'avatar-choice'}
-                    onClick={() => onSettingsChange('avatarKey', preset.key)}
-                  >
-                    <Avatar avatarKey={preset.key} label={preset.key} />
-                    <span>{preset.key}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
+            <label>
+              Profile picture
+              <input type="file" accept="image/*" onChange={onSettingsAvatarUpload} />
+            </label>
+            <Avatar label={settingsDraft.displayName || settingsDraft.username} imageUrl={settingsDraft.avatarImage} />
             <button type="submit">Save settings</button>
           </form>
         </>
@@ -213,6 +230,7 @@ function ProfileCard({
 }
 
 function AuthScreen({
+  authError,
   authMode,
   createForm,
   demoUsers,
@@ -300,22 +318,6 @@ function AuthScreen({
                 required
               />
             </label>
-            <fieldset className="avatar-picker">
-              <legend>Profile picture</legend>
-              <div className="avatar-grid">
-                {AVATAR_PRESETS.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.key}
-                    className={createForm.avatarKey === preset.key ? 'avatar-choice active' : 'avatar-choice'}
-                    onClick={() => onCreateChange('avatarKey', preset.key)}
-                  >
-                    <Avatar avatarKey={preset.key} label={preset.key} />
-                    <span>{preset.key}</span>
-                  </button>
-                ))}
-              </div>
-            </fieldset>
             <button type="submit">Create account</button>
           </form>
         ) : (
@@ -343,15 +345,17 @@ function AuthScreen({
           </form>
         )}
 
+        {authError ? <p className="auth-error">{authError}</p> : null}
+
         <div className="demo-users">
           <div className="section-heading">
             <h3>Demo users</h3>
-            <span>Quick logins</span>
+            <span>Password: {DEMO_PASSWORD}</span>
           </div>
           <div className="demo-user-list">
             {demoUsers.map((user) => (
               <button type="button" key={user.id} onClick={() => onQuickLogin(user.username)}>
-                <Avatar avatarKey={user.avatarKey} label={user.displayName} />
+                <Avatar label={user.displayName} imageUrl={user.avatarImage} />
                 <span>
                   {user.displayName}
                   <strong>@{user.username}</strong>
@@ -366,6 +370,7 @@ function AuthScreen({
 }
 
 function App() {
+  const [authError, setAuthError] = useState('')
   const [session, setSession] = useState(() => {
     const saved = window.localStorage.getItem(SESSION_KEY)
     return saved ? JSON.parse(saved) : null
@@ -382,7 +387,6 @@ function App() {
     displayName: '',
     username: '',
     password: '',
-    avatarKey: AVATAR_PRESETS[0].key,
   })
   const [selection, setSelection] = useState(EMPTY_SELECTION)
   const [friendUsername, setFriendUsername] = useState('')
@@ -400,7 +404,7 @@ function App() {
     displayName: '',
     username: '',
     password: '',
-    avatarKey: AVATAR_PRESETS[0].key,
+    avatarImage: '',
   })
   const socketRef = useRef(null)
   const noticeTimeoutRef = useRef(null)
@@ -428,8 +432,8 @@ function App() {
       ...current,
       displayName: currentUser.displayName ?? '',
       username: currentUser.username ?? '',
-      avatarKey: currentUser.avatarKey ?? AVATAR_PRESETS[0].key,
       password: '',
+      avatarImage: currentUser.avatarImage ?? '',
     }))
     setSelection((current) => normalizeSelection(current, nextBootstrap))
   }
@@ -590,6 +594,7 @@ function App() {
 
   async function handleCreateAccount(event) {
     event.preventDefault()
+    setAuthError('')
     const data = await submitAction('/api/auth/signup', 'POST', createForm, 'Account created.')
     if (data?.session) {
       setSelection(EMPTY_SELECTION)
@@ -597,11 +602,14 @@ function App() {
       setLoginUsername(createForm.username)
       setLoginPassword('')
       setCreateForm((current) => ({ ...current, password: '' }))
+    } else {
+      setAuthError('Create account failed. See the exact API error below the form.')
     }
   }
 
   async function handleLogin(event) {
     event.preventDefault()
+    setAuthError('')
     const data = await submitAction(
       '/api/auth/login',
       'POST',
@@ -611,14 +619,17 @@ function App() {
     if (data?.session) {
       setSelection(EMPTY_SELECTION)
       setLoginPassword('')
+    } else {
+      setAuthError('Login failed. See the exact API error below the form.')
     }
   }
 
   async function handleQuickLogin(username) {
+    setAuthError('')
     setAuthMode('login')
     setLoginUsername(username)
-    setLoginPassword('')
-    setFlash(`Username @${username} filled. Enter password to log in.`)
+    setLoginPassword(DEMO_PASSWORD)
+    setFlash(`Demo login ready for @${username}. Press log in to continue.`)
   }
 
   async function handleSendFriendRequest(event) {
@@ -750,7 +761,7 @@ function App() {
         displayName: settingsDraft.displayName,
         username: settingsDraft.username,
         password: settingsDraft.password,
-        avatarKey: settingsDraft.avatarKey,
+        avatarImage: settingsDraft.avatarImage,
       },
       'Settings saved.',
     )
@@ -759,6 +770,31 @@ function App() {
       setLoginUsername(data.session.username)
       setLoginPassword('')
       setSettingsDraft((current) => ({ ...current, password: '' }))
+    }
+  }
+
+  async function handleSettingsAvatarUpload(event) {
+    const file = event.target.files?.[0]
+    if (!file) {
+      return
+    }
+
+    if (!file.type.startsWith('image/')) {
+      setFlash('Pick an image file.')
+      return
+    }
+
+    if (file.size > 1024 * 1024) {
+      setFlash('Image must be 1MB or smaller.')
+      return
+    }
+
+    try {
+      const imageDataUrl = await readFileAsDataUrl(file)
+      setSettingsDraft((current) => ({ ...current, avatarImage: imageDataUrl }))
+      setFlash('Profile picture selected. Save settings to apply it.')
+    } catch (error) {
+      setFlash(error.message)
     }
   }
 
@@ -811,15 +847,45 @@ function App() {
     }))
   }
 
+  function renderServerCreateForm(className = 'rail-create') {
+    return (
+      <form className={className} onSubmit={handleCreateServer}>
+        <input
+          value={serverForm.name}
+          onChange={(event) => setServerForm((current) => ({ ...current, name: event.target.value }))}
+          placeholder=":new-server"
+          required
+        />
+        <div className="mini-avatar-grid">
+          {AVATAR_PRESETS.slice(0, 4).map((preset) => (
+            <button
+              type="button"
+              key={preset.key}
+              className={serverForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
+              onClick={() => setServerForm((current) => ({ ...current, avatarKey: preset.key }))}
+            >
+              <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
+            </button>
+          ))}
+        </div>
+        <button type="submit">Create</button>
+      </form>
+    )
+  }
+
   if (!session || !snapshot) {
     return (
       <AuthScreen
+        authError={authError}
         authMode={authMode}
         createForm={createForm}
         demoUsers={demoUsers}
         loginPassword={loginPassword}
         loginUsername={loginUsername}
-        onAuthModeChange={setAuthMode}
+        onAuthModeChange={(mode) => {
+          setAuthError('')
+          setAuthMode(mode)
+        }}
         onCreateChange={(field, value) => setCreateForm((current) => ({ ...current, [field]: value }))}
         onCreateSubmit={handleCreateAccount}
         onLoginPasswordChange={setLoginPassword}
@@ -832,7 +898,7 @@ function App() {
 
   const serverTabBadge = snapshot.servers.reduce((total, server) => total + countServerPings(server), 0)
   const messageTabBadge = sumUnread(snapshot.dms) + sumUnread(snapshot.groups)
-  const friendTabBadge = snapshot.pendingFriendRequests.length + snapshot.serverInvites.length
+  const socialTabBadge = messageTabBadge + snapshot.pendingFriendRequests.length + snapshot.serverInvites.length
   const currentMembers =
     selection.section === 'servers'
       ? currentServer?.members ?? []
@@ -844,40 +910,21 @@ function App() {
 
   return (
     <div className="shell-root">
-      <header className="tabline">
-        {[
-          { key: 'servers', label: 'SERVERS', badge: serverTabBadge },
-          { key: 'messages', label: 'MESSAGES', badge: messageTabBadge },
-          { key: 'friends', label: 'FRIENDS', badge: friendTabBadge },
-          { key: 'profile', label: 'PROFILE', badge: 0 },
-        ].map((item) => (
-          <button
-            type="button"
-            key={item.key}
-            className={selection.section === item.key ? 'tab active' : 'tab'}
-            onClick={() =>
-              setSelection((current) => ({
-                ...current,
-                section: item.key,
-                profileUsername: item.key === 'profile' ? snapshot.user.username : current.profileUsername,
-              }))
-            }
-          >
-            <span>{item.label}</span>
-            {item.badge ? <strong>{item.badge}</strong> : null}
-          </button>
-        ))}
-        <div className="tabline-meta">mouse friendly | no Vim keybinds</div>
-      </header>
-
       <div className="workspace-grid">
         <aside className="server-rail">
           <button
             type="button"
-            className="brand-tile"
-            onClick={() => setSelection((current) => ({ ...current, section: 'servers' }))}
+            className={selection.section === 'messages' ? 'brand-title active' : 'brand-title'}
+            onClick={() =>
+              setSelection((current) => ({
+                ...current,
+                section: 'messages',
+                messageMode: current.messageMode || 'dms',
+              }))
+            }
           >
             cv
+            {socialTabBadge ? <span className="ping-dot">{socialTabBadge}</span> : null}
           </button>
           {snapshot.servers.map((server) => {
             const badge = countServerPings(server)
@@ -885,7 +932,9 @@ function App() {
               <button
                 type="button"
                 key={server.id}
-                className={selection.serverId === server.id && selection.section === 'servers' ? 'rail-item active' : 'rail-item'}
+                className={
+                  selection.serverId === server.id && selection.section === 'servers' ? 'rail-item active' : 'rail-item'
+                }
                 onClick={() =>
                   setSelection((current) => ({
                     ...current,
@@ -900,27 +949,27 @@ function App() {
               </button>
             )
           })}
-          <form className="rail-create" onSubmit={handleCreateServer}>
-            <input
-              value={serverForm.name}
-              onChange={(event) => setServerForm((current) => ({ ...current, name: event.target.value }))}
-              placeholder=":new-server"
-              required
-            />
-            <div className="mini-avatar-grid">
-              {AVATAR_PRESETS.slice(0, 4).map((preset) => (
-                <button
-                  type="button"
-                  key={preset.key}
-                  className={serverForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
-                  onClick={() => setServerForm((current) => ({ ...current, avatarKey: preset.key }))}
-                >
-                  <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
-                </button>
-              ))}
-            </div>
-            <button type="submit">Create</button>
-          </form>
+          <div className="rail-bottom">
+            {renderServerCreateForm()}
+
+            <button
+              type="button"
+              className="rail-userplate"
+              onClick={() =>
+                setSelection((current) => ({
+                  ...current,
+                  section: 'profile',
+                  profileUsername: snapshot.user.username,
+                }))
+              }
+            >
+              <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} size="sm" />
+              <span>
+                {snapshot.user.displayName}
+                <strong>@{snapshot.user.username}</strong>
+              </span>
+            </button>
+          </div>
         </aside>
 
         <aside className="sidebar-pane">
@@ -930,6 +979,7 @@ function App() {
                 <h2>{currentServer?.name ?? 'No servers yet'}</h2>
                 <p>{currentServer ? `${currentServer.members.length} members` : 'Create a server to begin.'}</p>
               </div>
+              {!currentServer ? renderServerCreateForm('stack-form') : null}
 
               <div className="channel-list">
                 {currentServer?.channels.map((channel) => (
@@ -1025,7 +1075,7 @@ function App() {
                       className={selection.dmId === dm.id ? 'list-card active' : 'list-card'}
                       onClick={() => openDm(dm.id)}
                     >
-                      <Avatar avatarKey={dm.member.avatarKey} label={dm.member.displayName} />
+                      <Avatar label={dm.member.displayName} imageUrl={dm.member.avatarImage} />
                       <span>
                         {dm.member.displayName}
                         <strong>@{dm.member.username}</strong>
@@ -1099,15 +1149,6 @@ function App() {
                 </div>
                 <button type="submit">Create group</button>
               </form>
-            </>
-          ) : null}
-
-          {selection.section === 'friends' ? (
-            <>
-              <div className="pane-header">
-                <h2>Friend Requests</h2>
-                <p>Search by username, not display name.</p>
-              </div>
 
               <form className="stack-form" onSubmit={handleSendFriendRequest}>
                 <div className="section-heading">
@@ -1125,13 +1166,13 @@ function App() {
 
               <div className="request-panel">
                 <div className="section-heading">
-                  <h3>Incoming</h3>
+                  <h3>Friend requests</h3>
                   <span>{snapshot.pendingFriendRequests.length}</span>
                 </div>
                 {snapshot.pendingFriendRequests.map((request) => (
                   <div key={request.id} className="request-row">
                     <button type="button" className="profile-link" onClick={() => openProfile(request)}>
-                      <Avatar avatarKey={request.avatarKey} label={request.displayName} />
+                      <Avatar label={request.displayName} imageUrl={request.avatarImage} />
                       <span>@{request.username}</span>
                     </button>
                     <div className="row-actions">
@@ -1144,7 +1185,7 @@ function App() {
                     </div>
                   </div>
                 ))}
-                {!snapshot.pendingFriendRequests.length ? <VimFiller lines={5} /> : null}
+                {!snapshot.pendingFriendRequests.length ? <VimFiller lines={4} /> : null}
               </div>
 
               <div className="request-panel">
@@ -1168,26 +1209,7 @@ function App() {
                     </div>
                   </div>
                 ))}
-                {!snapshot.serverInvites.length ? <VimFiller lines={4} /> : null}
-              </div>
-
-              <div className="request-panel compact-list">
-                <div className="section-heading">
-                  <h3>Friends</h3>
-                  <span>{snapshot.friends.length}</span>
-                </div>
-                {snapshot.friends.map((friend) => {
-                  const dm = snapshot.dms.find((item) => item.member.id === friend.id)
-                  return (
-                    <div key={friend.id} className="request-row">
-                      <button type="button" className="profile-link" onClick={() => openProfile(friend)}>
-                        <Avatar avatarKey={friend.avatarKey} label={friend.displayName} />
-                        <span>@{friend.username}</span>
-                      </button>
-                      <div className="row-actions">{dm ? <button type="button" onClick={() => openDm(dm.id)}>DM</button> : null}</div>
-                    </div>
-                  )
-                })}
+                {!snapshot.serverInvites.length ? <VimFiller lines={3} /> : null}
               </div>
             </>
           ) : null}
@@ -1207,7 +1229,7 @@ function App() {
                     className={selection.profileUsername === person.username ? 'list-card active' : 'list-card'}
                     onClick={() => openProfile(person)}
                   >
-                    <Avatar avatarKey={person.avatarKey} label={person.displayName} />
+                    <Avatar label={person.displayName} imageUrl={person.avatarImage} />
                     <span>
                       {person.displayName}
                       <strong>@{person.username}</strong>
@@ -1248,7 +1270,7 @@ function App() {
                     <div className="message-index">{String(index + 1).padStart(2, '0')}</div>
                     <div className="message-body">
                       <button type="button" className="message-author" onClick={() => openProfile(message.author)}>
-                        <Avatar avatarKey={message.author.avatarKey} label={message.author.displayName} size="sm" />
+                        <Avatar label={message.author.displayName} imageUrl={message.author.avatarImage} size="sm" />
                         <span>
                           {message.author.displayName}
                           <strong>@{message.author.username}</strong>
@@ -1326,6 +1348,7 @@ function App() {
               settingsDraft={settingsDraft}
               onSettingsChange={(field, value) => setSettingsDraft((current) => ({ ...current, [field]: value }))}
               onSettingsSave={handleSaveSettings}
+              onSettingsAvatarUpload={handleSettingsAvatarUpload}
             />
           ) : null}
         </main>
@@ -1338,7 +1361,7 @@ function App() {
           <div className="member-list">
             {currentMembers.map((member) => (
               <button type="button" key={member.id} className="member-card" onClick={() => openProfile(member)}>
-                <Avatar avatarKey={member.avatarKey} label={member.displayName} />
+                <Avatar label={member.displayName} imageUrl={member.avatarImage} />
                 <span>
                   {member.displayName}
                   <strong>@{member.username}</strong>
