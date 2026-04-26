@@ -375,8 +375,7 @@ function App() {
   const [friendUsername, setFriendUsername] = useState('')
   const [serverForm, setServerForm] = useState({ name: '', avatarKey: AVATAR_PRESETS[1].key })
   const [isServerCreateOpen, setIsServerCreateOpen] = useState(false)
-  const [isChannelMenuOpen, setIsChannelMenuOpen] = useState(false)
-  const [isInviteMenuOpen, setIsInviteMenuOpen] = useState(false)
+  const [isServerOptionsOpen, setIsServerOptionsOpen] = useState(false)
   const [isChannelCreateOpen, setIsChannelCreateOpen] = useState(false)
   const [isInviteFriendOpen, setIsInviteFriendOpen] = useState(false)
   const [channelName, setChannelName] = useState('')
@@ -990,69 +989,50 @@ function App() {
           {selection.section === 'servers' ? (
             <>
               <div className="pane-header">
-                <h2>{currentServer?.name ?? 'No servers yet'}</h2>
-                <p>{currentServer ? `${currentServer.members.length} members` : 'Create a server to begin.'}</p>
-              </div>
-
-              {currentServer ? (
-                <div className="server-action-row">
-                  {currentServer.ownerId === snapshot.user.id ? (
-                    <div className="server-dropdown">
-                      <button
-                        type="button"
-                        className="server-dropdown-trigger"
-                        aria-expanded={isChannelMenuOpen}
-                        onClick={() => {
-                          setIsChannelMenuOpen((current) => !current)
-                          setIsInviteMenuOpen(false)
-                        }}
-                      >
-                        Channel
-                      </button>
-                      {isChannelMenuOpen ? (
-                        <div className="server-dropdown-menu">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setIsChannelCreateOpen(true)
-                              setIsChannelMenuOpen(false)
-                            }}
-                          >
-                            New channel
-                          </button>
-                        </div>
-                      ) : null}
-                    </div>
-                  ) : null}
-
-                  <div className="server-dropdown">
-                    <button
-                      type="button"
-                      className="server-dropdown-trigger"
-                      aria-expanded={isInviteMenuOpen}
-                      onClick={() => {
-                        setIsInviteMenuOpen((current) => !current)
-                        setIsChannelMenuOpen(false)
-                      }}
-                    >
-                      Invite
-                    </button>
-                    {isInviteMenuOpen ? (
-                      <div className="server-dropdown-menu">
+                <div className="server-title-wrap">
+                  <div className="server-title-row">
+                    <h2>{currentServer?.name ?? 'No servers yet'}</h2>
+                    {currentServer ? (
+                      <div className="server-dropdown">
                         <button
                           type="button"
-                          onClick={() => {
-                            setIsInviteFriendOpen(true)
-                            setIsInviteMenuOpen(false)
-                          }}
+                          className="server-options-trigger"
+                          aria-expanded={isServerOptionsOpen}
+                          aria-label="Open server options"
+                          onClick={() => setIsServerOptionsOpen((current) => !current)}
                         >
-                          Invite a friend
+                          ▾
                         </button>
+                        {isServerOptionsOpen ? (
+                          <div className="server-dropdown-menu">
+                            {currentServer.ownerId === snapshot.user.id ? (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setIsChannelCreateOpen(true)
+                                  setIsServerOptionsOpen(false)
+                                }}
+                              >
+                                New channel
+                              </button>
+                            ) : null}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setIsInviteFriendOpen(true)
+                                setIsServerOptionsOpen(false)
+                              }}
+                            >
+                              Invite a friend
+                            </button>
+                          </div>
+                        ) : null}
                       </div>
                     ) : null}
                   </div>
+                  <p>{currentServer ? `${currentServer.members.length} members` : 'Create a server to begin.'}</p>
                 </div>
-              ) : null}
+              </div>
 
               <div className="channel-list">
                 {currentServer?.channels.map((channel) => (
