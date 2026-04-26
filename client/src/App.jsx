@@ -1293,7 +1293,7 @@ function App() {
                   placeholder={
                     currentRoom.canSend === false
                       ? 'This channel is read-only for members.'
-                      : 'Type a message. Use @everyone to trigger a red ping badge.'
+                      : `Message #${currentChannel?.name}`
                   }
                   disabled={currentRoom.canSend === false}
                 />
