@@ -374,6 +374,11 @@ function App() {
   const [selection, setSelection] = useState(EMPTY_SELECTION)
   const [friendUsername, setFriendUsername] = useState('')
   const [serverForm, setServerForm] = useState({ name: '', avatarKey: AVATAR_PRESETS[1].key })
+  const [isServerCreateOpen, setIsServerCreateOpen] = useState(false)
+  const [isChannelMenuOpen, setIsChannelMenuOpen] = useState(false)
+  const [isInviteMenuOpen, setIsInviteMenuOpen] = useState(false)
+  const [isChannelCreateOpen, setIsChannelCreateOpen] = useState(false)
+  const [isInviteFriendOpen, setIsInviteFriendOpen] = useState(false)
   const [channelName, setChannelName] = useState('')
   const [groupForm, setGroupForm] = useState({
     name: '',
@@ -668,6 +673,7 @@ function App() {
     if (data?.serverId) {
       setSelection((current) => ({ ...current, section: 'servers', serverId: data.serverId }))
       setServerForm({ name: '', avatarKey: AVATAR_PRESETS[1].key })
+      setIsServerCreateOpen(false)
     }
   }
 
@@ -683,6 +689,7 @@ function App() {
     if (data?.channelId) {
       setSelection((current) => ({ ...current, channelId: data.channelId }))
       setChannelName('')
+      setIsChannelCreateOpen(false)
     }
   }
 
@@ -701,12 +708,17 @@ function App() {
       return
     }
 
-    await submitAction(
+    const data = await submitAction(
       `/api/servers/${selection.serverId}/invite`,
       'POST',
       { userId: session.userId, friendId: inviteFriendId },
       'Server invite sent.',
     )
+
+    if (data) {
+      setInviteFriendId('')
+      setIsInviteFriendOpen(false)
+    }
   }
 
   async function handleCreateGroup(event) {
@@ -832,9 +844,62 @@ function App() {
 
   function renderServerCreateForm(className = 'rail-create') {
     return (
-      <form className={className} onSubmit={handleCreateServer}>
-        <button type="submit">+</button>
-      </form>
+      <div className={className}>
+        <button
+          type="button"
+          className="rail-create-trigger"
+          aria-expanded={isServerCreateOpen}
+          aria-haspopup="dialog"
+          onClick={() => setIsServerCreateOpen((current) => !current)}
+        >
+          +
+        </button>
+
+        {isServerCreateOpen ? (
+          <div className="rail-create-overlay" onClick={() => setIsServerCreateOpen(false)}>
+            <form className="rail-create-popover" onSubmit={handleCreateServer} onClick={(event) => event.stopPropagation()}>
+              <div className="section-heading">
+                <h3>New server</h3>
+                <span>Choose a name and icon</span>
+              </div>
+              <input
+                value={serverForm.name}
+                onChange={(event) => setServerForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder="patch-notes"
+                required
+              />
+              <div className="mini-avatar-grid">
+                {AVATAR_PRESETS.map((preset) => (
+                  <button
+                    type="button"
+                    key={preset.key}
+                    className={serverForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
+                    onClick={() => setServerForm((current) => ({ ...current, avatarKey: preset.key }))}
+                  >
+                    <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
+                  </button>
+                ))}
+              </div>
+              <div className="rail-create-actions">
+                <button type="submit">Create</button>
+                <button type="button" className="ghost" onClick={() => setIsServerCreateOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>
+          </div>
+        ) : null}
+      </div>
+    )
+  }
+
+  function renderModal(children, onClose) {
+    return (
+      <div className="modal-overlay" onClick={onClose}>
+        <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
+          {children}
+        </div>
+      </div>
     )
   }
 
@@ -928,7 +993,66 @@ function App() {
                 <h2>{currentServer?.name ?? 'No servers yet'}</h2>
                 <p>{currentServer ? `${currentServer.members.length} members` : 'Create a server to begin.'}</p>
               </div>
-              {!currentServer ? renderServerCreateForm('stack-form') : null}
+
+              {currentServer ? (
+                <div className="server-action-row">
+                  {currentServer.ownerId === snapshot.user.id ? (
+                    <div className="server-dropdown">
+                      <button
+                        type="button"
+                        className="server-dropdown-trigger"
+                        aria-expanded={isChannelMenuOpen}
+                        onClick={() => {
+                          setIsChannelMenuOpen((current) => !current)
+                          setIsInviteMenuOpen(false)
+                        }}
+                      >
+                        Channel
+                      </button>
+                      {isChannelMenuOpen ? (
+                        <div className="server-dropdown-menu">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setIsChannelCreateOpen(true)
+                              setIsChannelMenuOpen(false)
+                            }}
+                          >
+                            New channel
+                          </button>
+                        </div>
+                      ) : null}
+                    </div>
+                  ) : null}
+
+                  <div className="server-dropdown">
+                    <button
+                      type="button"
+                      className="server-dropdown-trigger"
+                      aria-expanded={isInviteMenuOpen}
+                      onClick={() => {
+                        setIsInviteMenuOpen((current) => !current)
+                        setIsChannelMenuOpen(false)
+                      }}
+                    >
+                      Invite
+                    </button>
+                    {isInviteMenuOpen ? (
+                      <div className="server-dropdown-menu">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setIsInviteFriendOpen(true)
+                            setIsInviteMenuOpen(false)
+                          }}
+                        >
+                          Invite a friend
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                </div>
+              ) : null}
 
               <div className="channel-list">
                 {currentServer?.channels.map((channel) => (
@@ -953,42 +1077,6 @@ function App() {
                     ) : null}
                   </div>
                 ))}
-              </div>
-
-              {currentServer?.ownerId === snapshot.user.id ? (
-                <form className="stack-form" onSubmit={handleCreateChannel}>
-                  <div className="section-heading">
-                    <h3>New channel</h3>
-                    <span>Owner controls permissions</span>
-                  </div>
-                  <input
-                    value={channelName}
-                    onChange={(event) => setChannelName(event.target.value)}
-                    placeholder="patch-notes"
-                    required
-                  />
-                  <button type="submit">Add channel</button>
-                </form>
-              ) : null}
-
-              <div className="stack-form">
-                <div className="section-heading">
-                  <h3>Invite a friend</h3>
-                  <span>Only friends can be invited</span>
-                </div>
-                <select value={inviteFriendId} onChange={(event) => setInviteFriendId(event.target.value)}>
-                  <option value="">Select a friend</option>
-                  {snapshot.friends
-                    .filter((friend) => !currentServer?.members.some((member) => member.id === friend.id))
-                    .map((friend) => (
-                      <option key={friend.id} value={friend.id}>
-                        @{friend.username}
-                      </option>
-                    ))}
-                </select>
-                <button type="button" onClick={handleInviteFriend}>
-                  Send invite
-                </button>
               </div>
             </>
           ) : null}
@@ -1290,7 +1378,6 @@ function App() {
         <aside className="member-pane">
           <div className="pane-header">
             <h2>Members</h2>
-            <p>Nameplates open profile pages.</p>
           </div>
           <div className="member-list">
             {currentMembers.map((member) => (
@@ -1315,6 +1402,60 @@ function App() {
           logout
         </button>
       </footer>
+
+      {isChannelCreateOpen
+        ? renderModal(
+            <form className="stack-form modal-form" onSubmit={handleCreateChannel}>
+              <div className="section-heading">
+                <h3>New channel</h3>
+                <span>Owner controls permissions</span>
+              </div>
+              <input
+                value={channelName}
+                onChange={(event) => setChannelName(event.target.value)}
+                placeholder="patch-notes"
+                required
+              />
+              <div className="modal-actions">
+                <button type="submit">Add channel</button>
+                <button type="button" className="ghost" onClick={() => setIsChannelCreateOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>,
+            () => setIsChannelCreateOpen(false),
+          )
+        : null}
+
+      {isInviteFriendOpen
+        ? renderModal(
+            <div className="stack-form modal-form">
+              <div className="section-heading">
+                <h3>Invite a friend</h3>
+                <span>Only friends can be invited</span>
+              </div>
+              <select value={inviteFriendId} onChange={(event) => setInviteFriendId(event.target.value)}>
+                <option value="">Select a friend</option>
+                {snapshot.friends
+                  .filter((friend) => !currentServer?.members.some((member) => member.id === friend.id))
+                  .map((friend) => (
+                    <option key={friend.id} value={friend.id}>
+                      @{friend.username}
+                    </option>
+                  ))}
+              </select>
+              <div className="modal-actions">
+                <button type="button" onClick={handleInviteFriend}>
+                  Send invite
+                </button>
+                <button type="button" className="ghost" onClick={() => setIsInviteFriendOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </div>,
+            () => setIsInviteFriendOpen(false),
+          )
+        : null}
     </div>
   )
 }

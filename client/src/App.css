@@ -140,9 +140,88 @@
 }
 
 .rail-create {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 10px;
+  padding: 0;
+  background: transparent;
+  border: 0;
+}
+
+.rail-create-trigger {
+  width: 100%;
+  min-height: 54px;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.rail-create-popover {
+  width: min(320px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border: 1px solid var(--line-strong);
+  background: var(--bg-soft);
+  box-shadow: var(--shadow);
+}
+
+.rail-create-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(9, 12, 18, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(9, 12, 18, 0.62);
+  backdrop-filter: blur(4px);
+}
+
+.modal-panel {
+  width: min(360px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  padding: 14px;
+  border: 1px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--bg-soft);
+  box-shadow: var(--shadow);
+}
+
+.modal-form {
+  margin: 0;
+}
+
+.rail-create-popover {
+  border-radius: 12px;
+}
+
+.rail-create-popover .mini-avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.rail-create-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.rail-create-actions button {
+  flex: 1;
 }
 
 .rail-bottom {
@@ -150,6 +229,55 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.server-action-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.server-dropdown {
+  position: relative;
+}
+
+.server-dropdown-trigger {
+  border: 1px solid var(--line-strong);
+  background: var(--accent-soft);
+  color: var(--heading);
+  padding: 10px 12px;
+}
+
+.server-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 10;
+  min-width: 180px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: var(--bg-soft);
+  box-shadow: var(--shadow);
+}
+
+.server-dropdown-menu button {
+  border: 1px solid var(--line);
+  background: #1a202d;
+  color: var(--text);
+  padding: 10px 12px;
+  text-align: left;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.modal-actions button {
+  flex: 1;
 }
 
 .rail-userplate {
@@ -758,6 +886,10 @@
   .rail-create {
     margin-top: 0;
     min-width: 240px;
+  }
+
+  .rail-create-popover {
+    width: min(320px, calc(100vw - 32px));
   }
 
   .message-row {
