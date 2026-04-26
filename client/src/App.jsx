@@ -378,11 +378,13 @@ function App() {
   const [isServerOptionsOpen, setIsServerOptionsOpen] = useState(false)
   const [isChannelCreateOpen, setIsChannelCreateOpen] = useState(false)
   const [isInviteFriendOpen, setIsInviteFriendOpen] = useState(false)
+  const [isGroupCreateOpen, setIsGroupCreateOpen] = useState(false)
   const [channelName, setChannelName] = useState('')
   const [groupForm, setGroupForm] = useState({
     name: '',
     avatarKey: AVATAR_PRESETS[2].key,
     memberIds: [],
+    avatarImage: '',
   })
   const [inviteFriendId, setInviteFriendId] = useState('')
   const [draftMessage, setDraftMessage] = useState('')
@@ -552,7 +554,7 @@ function App() {
       method: 'POST',
       body: JSON.stringify({ userId: session.userId, roomId: currentRoom.id }),
     }).catch(() => {})
-  }, [currentRoom?.id, session?.userId])
+  }, [currentRoom?.id, currentRoom?.unread, currentRoom?.ping, session?.userId])
 
   async function submitAction(path, method, body, successMessage) {
     setLoading(true)
@@ -736,7 +738,8 @@ function App() {
         messageMode: 'groups',
         groupId: data.groupId,
       }))
-      setGroupForm({ name: '', avatarKey: AVATAR_PRESETS[2].key, memberIds: [] })
+      setGroupForm({ name: '', avatarKey: AVATAR_PRESETS[2].key, memberIds: [], avatarImage: '' })
+      setIsGroupCreateOpen(false)
     }
   }
 
@@ -864,21 +867,16 @@ function App() {
               <input
                 value={serverForm.name}
                 onChange={(event) => setServerForm((current) => ({ ...current, name: event.target.value }))}
-                placeholder="patch-notes"
+                placeholder="Dev Team 1"
                 required
               />
-              <div className="mini-avatar-grid">
-                {AVATAR_PRESETS.map((preset) => (
-                  <button
-                    type="button"
-                    key={preset.key}
-                    className={serverForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
-                    onClick={() => setServerForm((current) => ({ ...current, avatarKey: preset.key }))}
-                  >
-                    <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
-                  </button>
-                ))}
-              </div>
+              <label htmlFor="avatar">Choose an icon</label>
+              <input
+                type="file"
+                name="avatar"
+                id="avatar"
+                accept="image/png, image/jpeg"
+              />
               <div className="rail-create-actions">
                 <button type="submit">Create</button>
                 <button type="button" className="ghost" onClick={() => setIsServerCreateOpen(false)}>
@@ -1065,7 +1063,14 @@ function App() {
             <>
               <div className="pane-header">
                 <h2>Direct Messages</h2>
-
+                <button
+                  type="button"
+                  className="pane-header-action"
+                  onClick={() => setIsGroupCreateOpen(true)}
+                  aria-label="New group chat"
+                >
+                  +
+                </button>
               </div>
 
               {selection.messageMode === 'dms' ? (
@@ -1105,52 +1110,6 @@ function App() {
                   ))}
                 </div>
               )}
-
-              <form className="stack-form" onSubmit={handleCreateGroup}>
-                <div className="section-heading">
-                  <h3>New group chat</h3>
-                  <span>Up to 10 members total</span>
-                </div>
-                <input
-                  value={groupForm.name}
-                  onChange={(event) => setGroupForm((current) => ({ ...current, name: event.target.value }))}
-                  placeholder="Sprint room"
-                  required
-                />
-                <div className="mini-avatar-grid">
-                  {AVATAR_PRESETS.slice(2).map((preset) => (
-                    <button
-                      type="button"
-                      key={preset.key}
-                      className={groupForm.avatarKey === preset.key ? 'mini-avatar active' : 'mini-avatar'}
-                      onClick={() => setGroupForm((current) => ({ ...current, avatarKey: preset.key }))}
-                    >
-                      <Avatar avatarKey={preset.key} label={preset.key} size="sm" />
-                    </button>
-                  ))}
-                </div>
-                <div className="friend-chip-grid">
-                  {snapshot.friends.map((friend) => {
-                    const checked = groupForm.memberIds.includes(friend.id)
-                    return (
-                      <label key={friend.id} className={checked ? 'friend-chip active' : 'friend-chip'}>
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(event) => {
-                            const nextIds = event.target.checked
-                              ? [...groupForm.memberIds, friend.id]
-                              : groupForm.memberIds.filter((item) => item !== friend.id)
-                            setGroupForm((current) => ({ ...current, memberIds: nextIds }))
-                          }}
-                        />
-                        @{friend.username}
-                      </label>
-                    )
-                  })}
-                </div>
-                <button type="submit">Create group</button>
-              </form>
 
               <form className="stack-form" onSubmit={handleSendFriendRequest}>
                 <div className="section-heading">
@@ -1290,6 +1249,12 @@ function App() {
                 <textarea
                   value={draftMessage}
                   onChange={(event) => setDraftMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === 'Enter' && !event.shiftKey) {
+                      event.preventDefault()
+                      handleSendMessage(event)
+                    }
+                  }}
                   placeholder={
                     currentRoom.canSend === false
                       ? 'This channel is read-only for members.'
@@ -1434,6 +1399,75 @@ function App() {
               </div>
             </div>,
             () => setIsInviteFriendOpen(false),
+          )
+        : null}
+
+      {isGroupCreateOpen
+        ? renderModal(
+            <form className="stack-form modal-form" onSubmit={handleCreateGroup}>
+              <div className="section-heading">
+                <h3>New group chat</h3>
+                <span>Up to 10 members total</span>
+              </div>
+              <input
+                value={groupForm.name}
+                onChange={(event) => setGroupForm((current) => ({ ...current, name: event.target.value }))}
+                placeholder="Science Project"
+                required
+              />
+              <label htmlFor="group-avatar">Choose an icon</label>
+              <input
+                type="file"
+                name="group-avatar"
+                id="group-avatar"
+                accept="image/png, image/jpeg"
+                onChange={(event) => {
+                  const file = event.target.files?.[0]
+                  if (!file) return
+                  if (!file.type.startsWith('image/')) {
+                    setFlash('Pick an image file.')
+                    return
+                  }
+                  if (file.size > 1024 * 1024) {
+                    setFlash('Image must be 1MB or smaller.')
+                    return
+                  }
+                  readFileAsDataUrl(file)
+                    .then((imageDataUrl) => {
+                      setGroupForm((current) => ({ ...current, avatarKey: '', avatarImage: imageDataUrl }))
+                      setFlash('Group icon selected.')
+                    })
+                    .catch((error) => setFlash(error.message))
+                }}
+              />
+              <div className="friend-chip-grid">
+                {snapshot.friends.map((friend) => {
+                  const checked = groupForm.memberIds.includes(friend.id)
+                  return (
+                    <label key={friend.id} className={checked ? 'friend-chip active' : 'friend-chip'}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={(event) => {
+                          const nextIds = event.target.checked
+                            ? [...groupForm.memberIds, friend.id]
+                            : groupForm.memberIds.filter((item) => item !== friend.id)
+                          setGroupForm((current) => ({ ...current, memberIds: nextIds }))
+                        }}
+                      />
+                      @{friend.username}
+                    </label>
+                  )
+                })}
+              </div>
+              <div className="modal-actions">
+                <button type="submit">Create group</button>
+                <button type="button" className="ghost" onClick={() => setIsGroupCreateOpen(false)}>
+                  Cancel
+                </button>
+              </div>
+            </form>,
+            () => setIsGroupCreateOpen(false),
           )
         : null}
     </div>

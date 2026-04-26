@@ -107,18 +107,6 @@ The server currently stores users, rooms, requests, and messages in memory.
 - great for local UI iteration and feature validation
 - not suitable for production persistence
 
-## MongoDB Integration Note
-
-You do not need MongoDB to run this repo right now.
-
-You will need MongoDB when you want persistent data across restarts or deployment.
-
-Typical next steps:
-
-1. Provision MongoDB (local or Atlas)
-2. Add MONGODB_URI to server/.env
-3. Replace the in-memory state module in server/index.js with a database adapter
-
 ## Security and Production Notes
 
 - This project currently has no real auth/password system
