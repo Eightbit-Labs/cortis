@@ -231,21 +231,38 @@
   gap: 10px;
 }
 
-.server-action-row {
+.server-title-wrap {
   display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.server-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .server-dropdown {
   position: relative;
 }
 
-.server-dropdown-trigger {
+.server-dropdown-trigger,
+.server-options-trigger {
   border: 1px solid var(--line-strong);
   background: var(--accent-soft);
   color: var(--heading);
   padding: 10px 12px;
+}
+
+.server-options-trigger {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .server-dropdown-menu {
