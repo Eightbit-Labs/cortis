@@ -264,6 +264,7 @@ function AuthScreen({
             <li>Built in Github bot so that you can know the second someone pushes code.</li>
             <li>CD status notifications (your pipeline says thanks)</li>
             <li>Github style contributions tracking</li>
+            <li>Communication structure designed to streamline developer collaboration</li>
           </ul>
         </div>
       </section>
