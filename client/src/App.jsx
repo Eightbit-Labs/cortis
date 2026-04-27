@@ -1349,6 +1349,20 @@ function App() {
         </button>
       </footer>
 
+      <button
+        type="button"
+        className="bottom-profile-panel"
+        onClick={() => openProfile(snapshot.user)}
+        aria-label="Open your profile page"
+      >
+        <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} />
+        <span className="bottom-profile-content">
+          <strong>{snapshot.user.displayName}</strong>
+          <span>@{snapshot.user.username}</span>
+        </span>
+        <span className="bottom-profile-action">Edit profile</span>
+      </button>
+
       {isChannelCreateOpen
         ? renderModal(
             <form className="stack-form modal-form" onSubmit={handleCreateChannel}>
