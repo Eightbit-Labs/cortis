@@ -570,6 +570,42 @@ input[type="file"]::file-selector-button {
   margin-left: auto;
 }
 
+.bottom-profile-panel {
+  border: 1px solid var(--line-strong);
+  background: var(--accent-soft);
+  color: var(--text);
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+  position: relative;
+}
+
+.bottom-profile-content {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.bottom-profile-content strong {
+  color: var(--heading);
+}
+
+.bottom-profile-content span {
+  color: var(--muted);
+}
+
+.bottom-profile-action {
+  margin-left: auto;
+  border: 1px solid var(--line);
+  background: rgba(15, 20, 32, 0.5);
+  padding: 6px 10px;
+  color: var(--heading);
+}
+
 .alert-chip {
   border: 1px solid rgba(255, 107, 107, 0.35);
   background: var(--danger-soft);
@@ -960,5 +996,14 @@ input[type="file"]::file-selector-button {
   .tabline,
   .statusline {
     flex-wrap: wrap;
+  }
+
+  .bottom-profile-panel {
+    min-height: 64px;
+  }
+
+  .bottom-profile-action {
+    padding: 5px 8px;
+    font-size: 12px;
   }
 }

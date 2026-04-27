@@ -264,6 +264,7 @@ function AuthScreen({
             <li>Built in Github bot so that you can know the second someone pushes code.</li>
             <li>CD status notifications (your pipeline says thanks)</li>
             <li>Github style contributions tracking</li>
+            <li>Communication structure designed to streamline developer collaboration</li>
           </ul>
         </div>
       </section>
@@ -1347,6 +1348,20 @@ function App() {
           logout
         </button>
       </footer>
+
+      <button
+        type="button"
+        className="bottom-profile-panel"
+        onClick={() => openProfile(snapshot.user)}
+        aria-label="Open your profile page"
+      >
+        <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} />
+        <span className="bottom-profile-content">
+          <strong>{snapshot.user.displayName}</strong>
+          <span>@{snapshot.user.username}</span>
+        </span>
+        <span className="bottom-profile-action">Edit profile</span>
+      </button>
 
       {isChannelCreateOpen
         ? renderModal(
