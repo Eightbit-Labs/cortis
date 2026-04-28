@@ -1257,8 +1257,8 @@ function App() {
                         : 'Standard channel posting permissions.'
                       : selection.messageMode === 'groups'
                         ? `${currentGroup?.members.length ?? 0}/10 members`
-                        : `Direct messages with @${currentDm?.member.username}`}
-                  </p>
+                        : null}
+                    </p>
                 </div>
                 <div className="header-chips">
                   {selection.section === 'servers' ? <span>{currentServer?.name}</span> : null}
