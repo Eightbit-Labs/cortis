@@ -42,15 +42,7 @@ function Avatar({ avatarKey, label, size = 'md', imageUrl }) {
   )
 }
 
-function VimFiller({ lines = 10 }) {
-  return (
-    <div className="vim-filler" aria-hidden="true">
-      {Array.from({ length: lines }, (_, index) => (
-        <span key={index}>~</span>
-      ))}
-    </div>
-  )
-}
+
 
 async function apiRequest(path, options = {}) {
   const method = options.method ?? 'GET'
@@ -380,6 +372,8 @@ function App() {
   const [isChannelCreateOpen, setIsChannelCreateOpen] = useState(false)
   const [isInviteFriendOpen, setIsInviteFriendOpen] = useState(false)
   const [isGroupCreateOpen, setIsGroupCreateOpen] = useState(false)
+  const [isMessagesMenuOpen, setIsMessagesMenuOpen] = useState(false)
+  const [isAddFriendOpen, setIsAddFriendOpen] = useState(false)
   const [channelName, setChannelName] = useState('')
   const [groupForm, setGroupForm] = useState({
     name: '',
@@ -398,6 +392,7 @@ function App() {
   })
   const socketRef = useRef(null)
   const noticeTimeoutRef = useRef(null)
+  const messagesMenuRef = useRef(null)
 
   function setFlash(message) {
     window.clearTimeout(noticeTimeoutRef.current)
@@ -523,6 +518,24 @@ function App() {
       socketRef.current = null
     }
   }, [session])
+
+  useEffect(() => {
+    function handlePointerDown(event) {
+      if (!isMessagesMenuOpen) {
+        return
+      }
+
+      if (!messagesMenuRef.current?.contains(event.target)) {
+        setIsMessagesMenuOpen(false)
+      }
+    }
+
+    window.addEventListener('mousedown', handlePointerDown)
+
+    return () => {
+      window.removeEventListener('mousedown', handlePointerDown)
+    }
+  }, [isMessagesMenuOpen])
 
   const currentServer = snapshot?.servers.find((server) => server.id === selection.serverId) ?? null
   const currentChannel = currentServer?.channels.find((channel) => channel.id === selection.channelId) ?? null
@@ -1064,14 +1077,39 @@ function App() {
             <>
               <div className="pane-header">
                 <h2>Direct Messages</h2>
-                <button
-                  type="button"
-                  className="pane-header-action"
-                  onClick={() => setIsGroupCreateOpen(true)}
-                  aria-label="New group chat"
-                >
-                  +
-                </button>
+                <div className="server-dropdown" ref={messagesMenuRef}>
+                  <button
+                    type="button"
+                    className="pane-header-action"
+                    aria-expanded={isMessagesMenuOpen}
+                    aria-label="Open message actions"
+                    onClick={() => setIsMessagesMenuOpen((current) => !current)}
+                  >
+                    +
+                  </button>
+                  {isMessagesMenuOpen ? (
+                    <div className="server-dropdown-menu open-left">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsGroupCreateOpen(true)
+                          setIsMessagesMenuOpen(false)
+                        }}
+                      >
+                        New group chat
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setIsAddFriendOpen((current) => !current)
+                          setIsMessagesMenuOpen(false)
+                        }}
+                      >
+                        {isAddFriendOpen ? 'Hide add friend' : 'Add friend'}
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
               </div>
 
               {selection.messageMode === 'dms' ? (
@@ -1112,19 +1150,21 @@ function App() {
                 </div>
               )}
 
-              <form className="stack-form" onSubmit={handleSendFriendRequest}>
-                <div className="section-heading">
-                  <h3>Add friend</h3>
-                  <span>Use exact usernames</span>
-                </div>
-                <input
-                  value={friendUsername}
-                  onChange={(event) => setFriendUsername(event.target.value.toLowerCase())}
-                  placeholder="gwen"
-                  required
-                />
-                <button type="submit">Send request</button>
-              </form>
+              {isAddFriendOpen ? (
+                <form className="stack-form" onSubmit={handleSendFriendRequest}>
+                  <div className="section-heading">
+                    <h3>Add friend</h3>
+                    <span>Use exact usernames</span>
+                  </div>
+                  <input
+                    value={friendUsername}
+                    onChange={(event) => setFriendUsername(event.target.value.toLowerCase())}
+                    placeholder="gwen"
+                    required
+                  />
+                  <button type="submit">Send request</button>
+                </form>
+              ) : null}
 
               <div className="request-panel">
                 <div className="section-heading">
@@ -1147,7 +1187,7 @@ function App() {
                     </div>
                   </div>
                 ))}
-                {!snapshot.pendingFriendRequests.length ? <VimFiller lines={4} /> : null}
+                {!snapshot.pendingFriendRequests.length ? <p className="empty-state">No pending friend requests.</p> : null}
               </div>
 
               <div className="request-panel">
@@ -1171,7 +1211,7 @@ function App() {
                     </div>
                   </div>
                 ))}
-                {!snapshot.serverInvites.length ? <VimFiller lines={3} /> : null}
+                {!snapshot.serverInvites.length ? <p className="empty-state">No active server invites</p> : null}
               </div>
             </>
           ) : null}
@@ -1243,7 +1283,7 @@ function App() {
                     <time className="message-time">{formatTime(message.createdAt)}</time>
                   </article>
                 ))}
-                {!currentRoom.messages.length ? <VimFiller lines={12} /> : null}
+                {!currentRoom.messages.length ? <p className="empty-state">No messages yet. Start the conversation.</p> : null}
               </div>
 
               <form className="composer" onSubmit={handleSendMessage}>
@@ -1335,19 +1375,12 @@ function App() {
                 </span>
               </button>
             ))}
-            {!currentMembers.length ? <VimFiller lines={7} /> : null}
+            {!currentMembers.length ? <p className="empty-state">No members to show here.</p> : null}
           </div>
         </aside>
       </div>
 
-      <footer className="statusline">
-        <span>{loading ? '-- BUSY --' : '-- NORMAL WEB NAV --'}</span>
-        <span>{notice}</span>
-        <span>{connectionLabel}</span>
-        <button type="button" className="logout-button" onClick={handleLogout}>
-          logout
-        </button>
-      </footer>
+      
 
       <button
         type="button"

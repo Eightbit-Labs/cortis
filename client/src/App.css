@@ -280,6 +280,11 @@
   box-shadow: var(--shadow);
 }
 
+.server-dropdown-menu.open-left {
+  left: auto;
+  right: 0;
+}
+
 .server-dropdown-menu button {
   border: 1px solid var(--line);
   background: #1a202d;
@@ -551,6 +556,14 @@ input[type="file"]::file-selector-button {
 .message-body p {
   margin: 0;
   line-height: 1.7;
+}
+
+.empty-state {
+  margin: 0;
+  padding: 10px;
+  border: 1px dashed var(--line);
+  color: var(--muted);
+  text-align: center;
 }
 
 .vim-filler {
