@@ -619,6 +619,91 @@ input[type="file"]::file-selector-button {
   color: var(--heading);
 }
 
+.settings-toggle-button {
+  width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  background: rgba(15, 20, 32, 0.5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--heading);
+  cursor: pointer;
+}
+
+.settings-toggle-button svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.settings-modal-panel {
+  width: min(960px, calc(100vw - 48px));
+  max-height: calc(100vh - 56px);
+}
+
+.settings-modal-shell {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.settings-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.settings-modal-header h2 {
+  margin: 0;
+  font-family: var(--display);
+  color: var(--heading);
+}
+
+.settings-warning {
+  border: 1px solid rgba(255, 107, 107, 0.38);
+  background: rgba(255, 107, 107, 0.12);
+  color: #ffd9d9;
+  padding: 6px 10px;
+}
+
+.settings-subtabs {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-subtabs button {
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 12px;
+}
+
+.settings-subtabs button.active {
+  border-color: var(--line-strong);
+  background: var(--accent-soft);
+  color: var(--heading);
+}
+
+.settings-appearance-form {
+  background: var(--bg-soft);
+  border: 1px solid var(--line);
+  padding: 14px;
+}
+
+.settings-appearance-form input[type="color"] {
+  width: 100%;
+  height: 44px;
+  padding: 4px;
+  border: 1px solid var(--line);
+  background: var(--bg-code);
+}
+
+.settings-modal-actions {
+  justify-content: flex-end;
+}
+
 .alert-chip {
   border: 1px solid rgba(255, 107, 107, 0.35);
   background: var(--danger-soft);
