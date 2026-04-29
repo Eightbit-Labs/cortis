@@ -1,31 +1,18 @@
 # Cortis
 
-Cortis is a full-stack messaging website with a Vim-inspired visual style and normal web navigation.
-
-The app includes:
-
-- account creation with display name, username, and profile picture presets
-- friend requests by username (not display name)
-- direct messages and small group chats (max 10 members)
-- server creation, server invites, and multi-channel messaging
-- owner-controlled channel permissions (including owner-only posting)
-- profile pages with Markdown bios (200 character limit)
-- realtime updates with Socket.IO
-- red ping badges when messages include @everyone
+Cortis is a full-stack messaging app made for students and developers.
 
 ## Tech Stack
 
 - Frontend: React + Vite
-- Backend: Node.js + Express + Socket.IO
-- Current storage: in-memory server state
-- Optional persistence: MongoDB (not yet wired)
+- Backend: Node.js + Express + Socket.IO + Render
 
 ## Project Structure
 
 ```text
 cortis/
-	client/   # React app (Vite)
-	server/   # Express + Socket.IO API
+	client/   # React app 
+	server/   # Express + Socket.IO + Render API
 	README.md
 ```
 
@@ -115,4 +102,4 @@ The server currently stores users, rooms, requests, and messages in memory.
 
 ## License
 
-No license file is currently included. Add one if you plan to publish or distribute.
+MIT License
