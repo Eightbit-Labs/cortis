@@ -1,9 +1,12 @@
 .shell-root {
   min-height: 100vh;
-  padding: 18px;
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
+  --rail-col: 102px;
+  --sidebar-col: 320px;
+  --workspace-gap: 14px;
 }
 
 .tabline,
@@ -14,10 +17,30 @@
 .sidebar-pane,
 .main-pane,
 .member-pane {
-  background: var(--bg-panel);
-  border: 1px solid var(--line);
+  border: 1px solid var(--separator);
   box-shadow: var(--shadow);
   backdrop-filter: none;
+}
+
+.tabline,
+.statusline {
+  background: var(--surface-top);
+}
+
+.server-rail {
+  background: var(--surface-rail);
+}
+
+.sidebar-pane {
+  background: var(--surface-sidebar);
+}
+
+.main-pane {
+  background: var(--surface-main);
+}
+
+.member-pane {
+  background: var(--surface-member);
 }
 
 .tabline,
@@ -68,8 +91,22 @@
   flex: 1;
   display: grid;
   grid-template-columns: 102px 320px minmax(0, 1fr) 280px;
-  gap: 12px;
+  grid-template-rows: minmax(0, 1fr) auto;
+  column-gap: 14px;
+  row-gap: 0;
   min-height: 0;
+}
+
+.server-rail,
+.sidebar-pane,
+.main-pane,
+.member-pane {
+  grid-row: 1;
+}
+
+.main-pane,
+.member-pane {
+  grid-row: 1 / 3;
 }
 
 .server-rail,
@@ -81,17 +118,17 @@
 }
 
 .server-rail {
-  padding: 14px 10px;
+  padding: 16px 12px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 14px;
   align-items: stretch;
 }
 
 .brand-title,
 .rail-item {
   position: relative;
-  border: 1px solid var(--line);
+  border: 1px solid var(--separator);
   background: var(--bg-soft);
   padding: 10px;
   display: grid;
@@ -135,8 +172,8 @@
 .friends-main,
 .sidebar-profile-list {
   background: var(--bg-soft);
-  border: 1px solid var(--line);
-  padding: 14px;
+  border: 1px solid var(--separator);
+  padding: 16px;
 }
 
 .rail-create {
@@ -275,7 +312,7 @@
   display: flex;
   flex-direction: column;
   gap: 6px;
-  border: 1px solid var(--line);
+  border: 1px solid var(--separator);
   background: var(--bg-soft);
   box-shadow: var(--shadow);
 }
@@ -286,8 +323,8 @@
 }
 
 .server-dropdown-menu button {
-  border: 1px solid var(--line);
-  background: #1a202d;
+  border: 1px solid var(--separator);
+  background: rgba(12, 18, 30, 0.44);
   color: var(--text);
   padding: 10px 12px;
   text-align: left;
@@ -327,10 +364,10 @@
 .sidebar-pane,
 .member-pane,
 .main-pane {
-  padding: 14px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
-  gap: 14px;
+  gap: 16px;
 }
 
 .pane-header,
@@ -386,7 +423,7 @@
 .demo-user-list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .channel-row,
@@ -396,14 +433,14 @@
 .request-row,
 .profile-link,
 .message-author {
-  border: 1px solid var(--line);
-  background: #1a202d;
+  border: 1px solid var(--separator);
+  background: rgba(16, 24, 38, 0.52);
 }
 
 .channel-row.active,
 .list-card.active {
   border-color: var(--accent);
-  background: #24324b;
+  background: rgba(127, 178, 255, 0.14);
 }
 
 .channel-row {
@@ -462,7 +499,7 @@
 .logout-button,
 .rail-create button {
   border: 1px solid var(--line-strong);
-  background: var(--accent-soft);
+  background: rgba(127, 178, 255, 0.14);
   color: var(--heading);
   padding: 10px 12px;
 }
@@ -488,7 +525,7 @@
 .bio-editor textarea,
 .composer textarea {
   width: 100%;
-  border: 1px solid var(--line);
+  border: 1px solid var(--separator);
   background: var(--bg-code);
   color: var(--text);
   padding: 12px;
@@ -525,18 +562,18 @@ input[type="file"]::file-selector-button {
   flex: 1;
   min-height: 0;
   overflow: auto;
-  border: 1px solid var(--line);
-  background: linear-gradient(180deg, #121825, #0f1420);
-  padding: 12px;
+  border: 1px solid var(--separator);
+  background: linear-gradient(180deg, rgba(17, 24, 38, 0.86), rgba(16, 22, 34, 0.86));
+  padding: 14px;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
 .message-row {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) 76px;
-  gap: 12px;
+  gap: 14px;
   align-items: start;
 }
 
@@ -584,17 +621,20 @@ input[type="file"]::file-selector-button {
 }
 
 .bottom-profile-panel {
-  border: 1px solid var(--line-strong);
-  background: var(--accent-soft);
+  border: 1px solid var(--separator);
+  background: linear-gradient(90deg, rgba(127, 178, 255, 0.14), rgba(127, 178, 255, 0.09));
   color: var(--text);
   width: 100%;
+  grid-column: 1 / 3;
+  grid-row: 2;
   min-height: 72px;
-  padding: 12px 14px;
+  padding: 13px 16px;
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 14px;
   text-align: left;
   position: relative;
+  align-self: end;
 }
 
 .bottom-profile-content {
@@ -613,7 +653,7 @@ input[type="file"]::file-selector-button {
 
 .bottom-profile-action {
   margin-left: auto;
-  border: 1px solid var(--line);
+  border: 1px solid var(--separator);
   background: rgba(15, 20, 32, 0.5);
   padding: 6px 10px;
   color: var(--heading);
@@ -692,12 +732,36 @@ input[type="file"]::file-selector-button {
   padding: 14px;
 }
 
+.appearance-preset-row {
+  display: flex;
+  gap: 8px;
+}
+
+.appearance-preset-row button {
+  flex: 1;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--muted);
+  padding: 10px 12px;
+}
+
+.appearance-preset-row button.active {
+  border-color: var(--line-strong);
+  background: var(--accent-soft);
+  color: var(--heading);
+}
+
 .settings-appearance-form input[type="color"] {
   width: 100%;
   height: 44px;
   padding: 4px;
   border: 1px solid var(--line);
   background: var(--bg-code);
+}
+
+.settings-appearance-form input[type="color"]:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .settings-modal-actions {
@@ -1042,6 +1106,11 @@ input[type="file"]::file-selector-button {
 }
 
 @media (max-width: 1200px) {
+  .shell-root {
+    --rail-col: 88px;
+    --sidebar-col: 280px;
+  }
+
   .workspace-grid {
     grid-template-columns: 88px 280px minmax(0, 1fr);
   }
@@ -1052,10 +1121,21 @@ input[type="file"]::file-selector-button {
 }
 
 @media (max-width: 900px) {
+  .shell-root {
+    --rail-col: 1fr;
+    --sidebar-col: 0px;
+    --workspace-gap: 0px;
+  }
+
   .auth-screen,
   .workspace-grid,
   .insight-grid {
     grid-template-columns: 1fr;
+  }
+
+  .workspace-grid {
+    grid-template-rows: auto;
+    row-gap: 14px;
   }
 
   .auth-hero,
@@ -1098,6 +1178,9 @@ input[type="file"]::file-selector-button {
 
   .bottom-profile-panel {
     min-height: 64px;
+    width: 100%;
+    grid-column: auto;
+    grid-row: auto;
   }
 
   .bottom-profile-action {

@@ -2,26 +2,29 @@
 
 :root {
   --bg: #0f1117;
-  --bg-panel: #171b26;
-  --bg-soft: #1d2330;
+  --bg-panel: #1a1f2b;
+  --bg-soft: #202735;
   --bg-code: #131925;
-  --line: #2f3a4f;
-  --line-strong: #47618f;
+  --line: rgba(197, 214, 241, 0.1);
+  --line-strong: rgba(127, 178, 255, 0.36);
+  --surface-rail: #1a1f2b;
+  --surface-sidebar: #1d2330;
+  --surface-main: #202735;
+  --surface-member: #1b2230;
+  --surface-top: #181d29;
+  --separator: rgba(197, 214, 241, 0.08);
   --text: #d6deef;
   --muted: #8d9ab4;
   --heading: #f2f6ff;
   --accent: #7fb2ff;
-  --accent-soft: #283957;
+  --accent-soft: rgba(127, 178, 255, 0.18);
   --danger: #ff6b6b;
   --danger-soft: #442326;
-  --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+  --shadow: 0 6px 24px rgba(0, 0, 0, 0.22);
   --mono: 'IBM Plex Mono', monospace;
   --display: 'Space Grotesk', sans-serif;
   color: var(--text);
-  background:
-    radial-gradient(circle at top left, rgba(127, 178, 255, 0.12), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(86, 122, 184, 0.1), transparent 30%),
-    linear-gradient(180deg, #0d1119 0%, #0f1320 100%);
+  background: var(--bg);
   font-family: var(--mono);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
@@ -41,6 +44,7 @@ body,
 
 body {
   margin: 0;
+  background: var(--bg);
 }
 
 button,
@@ -60,4 +64,5 @@ a {
 
 #root {
   min-height: 100vh;
+  background: var(--bg);
 }
