@@ -1,6 +1,7 @@
 # Cortis
 
-Cortis is a full-stack messaging app made for students and developers.
+Cortis is a full-stack messaging app made for students and developers. <br>
+Logo design: [Nathaniel Shou]{https://github.com/MrDragon0011}
 
 ## Tech Stack
 

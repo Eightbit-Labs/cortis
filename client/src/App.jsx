@@ -294,6 +294,7 @@ function AuthScreen({
     <div className="auth-screen">
       <section className="auth-hero">
         <div className="hero-panel">
+          
           <p className="hero-kicker">cortis</p>
           <h1 className="hero-code">
             <span className="code-ident">console</span>
@@ -312,6 +313,18 @@ function AuthScreen({
             <li>Github style contributions tracking</li>
             <li>Communication structure designed to streamline developer collaboration</li>
           </ul>
+          <span style={{
+            display: 'block',
+            textAlign: 'right',
+            fontSize: '0.75rem',
+            color: 'var(--muted, #8d9ab4)',
+            opacity: 0.55,
+            marginTop: '1.5rem',
+            userSelect: 'none',
+            pointerEvents: 'none',
+          }}>
+            Logo by Mr_Dragon0011
+          </span>
         </div>
       </section>
 
@@ -393,7 +406,6 @@ function AuthScreen({
 
         {authError ? <p className="auth-error">{authError}</p> : null}
 
-        
       </section>
     </div>
   )
@@ -1121,9 +1133,9 @@ function App() {
                 section: 'messages',
                 messageMode: current.messageMode || 'dms',
               }))
-            } // text below will be replaced by logo
+            }
           > 
-            cv 
+            <img src="cortis-logo.svg" alt="Cortis Logo" /> 
             {socialTabBadge ? <span className="ping-dot">{socialTabBadge}</span> : null}
           </button>
           {snapshot.servers.map((server) => {
