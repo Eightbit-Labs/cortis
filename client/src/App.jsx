@@ -13,7 +13,7 @@ const DARK_THEME = {
   bgPanel: '#1a1f2b',
   bgSoft: '#202735',
   bgCode: '#131925',
-  line: 'rgba(197, 214, 241, 0.1)',
+  line: 'rgba(10, 14, 21, 0.1)',
   lineStrong: 'rgba(127, 178, 255, 0.36)',
   surfaceRail: '#1a1f2b',
   surfaceSidebar: '#1d2330',
@@ -741,15 +741,25 @@ function App() {
   async function handleCreateAccount(event) {
     event.preventDefault()
     setAuthError('')
-    const data = await submitAction('/api/auth/signup', 'POST', createForm, 'Account created.')
-    if (data?.session) {
-      setSelection(EMPTY_SELECTION)
-      setAuthMode('login')
-      setLoginUsername(createForm.username)
-      setLoginPassword('')
-      setCreateForm((current) => ({ ...current, password: '' }))
-    } else {
-      setAuthError('Create account failed. See the exact API error below the form.')
+    let data = null
+    try {
+      data = await submitAction('/api/auth/signup', 'POST', createForm, 'Account created.')
+      if (data?.session) {
+        setSelection(EMPTY_SELECTION)
+        setAuthMode('login')
+        setLoginUsername(createForm.username)
+        setLoginPassword('')
+        setCreateForm((current) => ({ ...current, password: '' }))
+      } else {
+        setAuthError('Create account failed. See the exact API error below the form.')
+      }
+    } catch (error) {
+      // Look for duplicate username error
+      if (error.message && error.message.includes('username is already taken')) {
+        setAuthError('username already taken')
+      } else {
+        setAuthError('Create account failed. See the exact API error below the form.')
+      }
     }
   }
 
