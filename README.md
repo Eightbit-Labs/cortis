@@ -102,4 +102,4 @@ The server currently stores users, rooms, requests, and messages in memory.
 
 ## License
 
-No license file is currently included. Add one if you plan to publish or distribute.
+MIT License
