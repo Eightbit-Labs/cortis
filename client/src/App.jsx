@@ -6,7 +6,57 @@ import './App.css'
 const API_URL = import.meta.env.VITE_API_URL ?? 'http://localhost:3001'
 const SOCKET_URL = import.meta.env.VITE_SOCKET_URL ?? API_URL
 const SESSION_KEY = 'cortis.session'
+const APPEARANCE_KEY = 'cortis.appearance'
 const DEMO_PASSWORD = 'demo123'
+const DARK_THEME = {
+  bg: '#0f1117',
+  bgPanel: '#1a1f2b',
+  bgSoft: '#202735',
+  bgCode: '#131925',
+  line: 'rgba(197, 214, 241, 0.1)',
+  lineStrong: 'rgba(127, 178, 255, 0.36)',
+  surfaceRail: '#1a1f2b',
+  surfaceSidebar: '#1d2330',
+  surfaceMain: '#202735',
+  surfaceMember: '#1b2230',
+  surfaceTop: '#181d29',
+  separator: 'rgba(197, 214, 241, 0.08)',
+  text: '#d6deef',
+  muted: '#8d9ab4',
+  heading: '#f2f6ff',
+  accent: '#7fb2ff',
+  accentSoft: 'rgba(127, 178, 255, 0.18)',
+  danger: '#ff6b6b',
+  dangerSoft: '#442326',
+}
+
+const LIGHT_THEME = {
+  bg: '#f2f5fc',
+  bgPanel: '#f8faff',
+  bgSoft: '#eef2fa',
+  bgCode: '#e7edf8',
+  line: 'rgba(42, 66, 110, 0.18)',
+  lineStrong: 'rgba(75, 114, 217, 0.48)',
+  surfaceRail: '#f8faff',
+  surfaceSidebar: '#f2f6ff',
+  surfaceMain: '#eef3ff',
+  surfaceMember: '#f4f7ff',
+  surfaceTop: '#f8faff',
+  separator: 'rgba(42, 66, 110, 0.12)',
+  text: '#1f293f',
+  muted: '#5f6e87',
+  heading: '#111a2c',
+  accent: '#4b72d9',
+  accentSoft: 'rgba(75, 114, 217, 0.14)',
+  danger: '#d94848',
+  dangerSoft: '#f9dede',
+}
+
+const DEFAULT_APPEARANCE = {
+  mode: 'dark',
+  background: DARK_THEME.bg,
+  accent: DARK_THEME.accent,
+}
 
 const AVATAR_PRESETS = [
   { key: 'amber-fox', glyph: '', tone: 'amber' },
@@ -101,6 +151,10 @@ function formatTime(value) {
 
 function countServerPings(server) {
   return server.channels.filter((channel) => channel.ping).length
+}
+
+function systemPrefersDark() {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
 }
 
 function normalizeSelection(current, bootstrap) {
@@ -374,6 +428,8 @@ function App() {
   const [isGroupCreateOpen, setIsGroupCreateOpen] = useState(false)
   const [isMessagesMenuOpen, setIsMessagesMenuOpen] = useState(false)
   const [isAddFriendOpen, setIsAddFriendOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [settingsTab, setSettingsTab] = useState('profile')
   const [channelName, setChannelName] = useState('')
   const [groupForm, setGroupForm] = useState({
     name: '',
@@ -390,9 +446,34 @@ function App() {
     password: '',
     avatarImage: '',
   })
+  const [appearanceSaved, setAppearanceSaved] = useState(() => {
+    const saved = window.localStorage.getItem(APPEARANCE_KEY)
+    if (!saved) {
+      return DEFAULT_APPEARANCE
+    }
+
+    try {
+      return { ...DEFAULT_APPEARANCE, ...JSON.parse(saved) }
+    } catch (_error) {
+      return DEFAULT_APPEARANCE
+    }
+  })
+  const [appearanceDraft, setAppearanceDraft] = useState(() => {
+    const saved = window.localStorage.getItem(APPEARANCE_KEY)
+    if (!saved) {
+      return DEFAULT_APPEARANCE
+    }
+
+    try {
+      return { ...DEFAULT_APPEARANCE, ...JSON.parse(saved) }
+    } catch (_error) {
+      return DEFAULT_APPEARANCE
+    }
+  })
   const socketRef = useRef(null)
   const noticeTimeoutRef = useRef(null)
   const messagesMenuRef = useRef(null)
+  const [prefersDarkTheme, setPrefersDarkTheme] = useState(() => systemPrefersDark())
 
   function setFlash(message) {
     window.clearTimeout(noticeTimeoutRef.current)
@@ -537,19 +618,58 @@ function App() {
     }
   }, [isMessagesMenuOpen])
 
+  useEffect(() => {
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const updateTheme = (event) => setPrefersDarkTheme(event.matches)
+
+    media.addEventListener('change', updateTheme)
+
+    return () => {
+      media.removeEventListener('change', updateTheme)
+    }
+  }, [])
+
+  useEffect(() => {
+    const baseTheme =
+      appearanceDraft.mode === 'light'
+        ? LIGHT_THEME
+        : appearanceDraft.mode === 'system'
+          ? prefersDarkTheme
+            ? DARK_THEME
+            : LIGHT_THEME
+          : DARK_THEME
+
+    const resolvedTheme = {
+      ...baseTheme,
+      background: appearanceDraft.mode === 'system' ? baseTheme.bg : appearanceDraft.background,
+      accent: appearanceDraft.mode === 'system' ? baseTheme.accent : appearanceDraft.accent,
+    }
+
+    document.documentElement.style.setProperty('--bg', resolvedTheme.background)
+    document.documentElement.style.setProperty('--bg-panel', resolvedTheme.bgPanel)
+    document.documentElement.style.setProperty('--bg-soft', resolvedTheme.bgSoft)
+    document.documentElement.style.setProperty('--bg-code', resolvedTheme.bgCode)
+    document.documentElement.style.setProperty('--line', resolvedTheme.line)
+    document.documentElement.style.setProperty('--line-strong', resolvedTheme.lineStrong)
+    document.documentElement.style.setProperty('--surface-rail', resolvedTheme.surfaceRail)
+    document.documentElement.style.setProperty('--surface-sidebar', resolvedTheme.surfaceSidebar)
+    document.documentElement.style.setProperty('--surface-main', resolvedTheme.surfaceMain)
+    document.documentElement.style.setProperty('--surface-member', resolvedTheme.surfaceMember)
+    document.documentElement.style.setProperty('--surface-top', resolvedTheme.surfaceTop)
+    document.documentElement.style.setProperty('--separator', resolvedTheme.separator)
+    document.documentElement.style.setProperty('--text', resolvedTheme.text)
+    document.documentElement.style.setProperty('--muted', resolvedTheme.muted)
+    document.documentElement.style.setProperty('--heading', resolvedTheme.heading)
+    document.documentElement.style.setProperty('--accent', resolvedTheme.accent)
+    document.documentElement.style.setProperty('--accent-soft', resolvedTheme.accentSoft)
+    document.documentElement.style.setProperty('--danger', resolvedTheme.danger)
+    document.documentElement.style.setProperty('--danger-soft', resolvedTheme.dangerSoft)
+  }, [appearanceDraft, prefersDarkTheme])
+
   const currentServer = snapshot?.servers.find((server) => server.id === selection.serverId) ?? null
   const currentChannel = currentServer?.channels.find((channel) => channel.id === selection.channelId) ?? null
   const currentDm = snapshot?.dms.find((dm) => dm.id === selection.dmId) ?? null
   const currentGroup = snapshot?.groups.find((group) => group.id === selection.groupId) ?? null
-  const knownProfiles = snapshot
-    ? [
-        snapshot.user,
-        ...snapshot.friends,
-        ...snapshot.servers.flatMap((server) => server.members),
-        ...snapshot.groups.flatMap((group) => group.members),
-      ]
-    : []
-  const viewedProfile = knownProfiles.find((person) => person.username === selection.profileUsername) ?? snapshot?.user
   const currentRoom =
     selection.section === 'servers'
       ? currentChannel
@@ -558,6 +678,17 @@ function App() {
         : selection.section === 'messages' && selection.messageMode === 'groups'
           ? currentGroup
           : null
+  const isProfileDirty =
+    bioDraft !== (snapshot?.user.bio ?? '') ||
+    settingsDraft.displayName !== (snapshot?.user.displayName ?? '') ||
+    settingsDraft.username !== (snapshot?.user.username ?? '') ||
+    settingsDraft.avatarImage !== (snapshot?.user.avatarImage ?? '') ||
+    settingsDraft.password.trim().length > 0
+  const isAppearanceDirty =
+    appearanceDraft.mode !== appearanceSaved.mode ||
+    appearanceDraft.background !== appearanceSaved.background ||
+    appearanceDraft.accent !== appearanceSaved.accent
+  const isSettingsDirty = isProfileDirty || isAppearanceDirty
 
   useEffect(() => {
     if (!session?.userId || !currentRoom?.id) {
@@ -832,12 +963,40 @@ function App() {
     setFlash('Logged out.')
   }
 
-  function openProfile(profile) {
-    setSelection((current) => ({
-      ...current,
-      section: 'profile',
-      profileUsername: profile.username,
-    }))
+  function openSettings(tab = 'profile') {
+    setSettingsTab(tab)
+    setIsSettingsOpen(true)
+  }
+
+  function requestCloseSettings() {
+    if (isSettingsDirty) {
+      setFlash('Save your changes before closing settings.')
+      return
+    }
+
+    setIsSettingsOpen(false)
+  }
+
+  function handleSaveAppearance(event) {
+    event.preventDefault()
+    window.localStorage.setItem(APPEARANCE_KEY, JSON.stringify(appearanceDraft))
+    setAppearanceSaved(appearanceDraft)
+    setFlash('Appearance saved.')
+  }
+
+  function applyAppearancePreset(mode) {
+    if (mode === 'system') {
+      const baseTheme = prefersDarkTheme ? DARK_THEME : LIGHT_THEME
+      setAppearanceDraft((current) => ({ ...current, mode: 'system', background: baseTheme.bg, accent: baseTheme.accent }))
+      return
+    }
+
+    const baseTheme = mode === 'light' ? LIGHT_THEME : DARK_THEME
+    setAppearanceDraft((current) => ({ ...current, mode, background: baseTheme.bg, accent: baseTheme.accent }))
+  }
+
+  function openProfile(_profile) {
+    openSettings('profile')
   }
 
   function openDm(dmId) {
@@ -904,10 +1063,10 @@ function App() {
     )
   }
 
-  function renderModal(children, onClose) {
+  function renderModal(children, onClose, panelClassName = 'modal-panel') {
     return (
       <div className="modal-overlay" onClick={onClose}>
-        <div className="modal-panel" onClick={(event) => event.stopPropagation()}>
+        <div className={panelClassName} onClick={(event) => event.stopPropagation()}>
           {children}
         </div>
       </div>
@@ -1216,30 +1375,6 @@ function App() {
             </>
           ) : null}
 
-          {selection.section === 'profile' ? (
-            <div className="sidebar-profile-list">
-              <div className="pane-header">
-                <h2>Profiles</h2>
-                <p>Click a member nameplate to inspect Markdown bios.</p>
-              </div>
-              {[snapshot.user, ...snapshot.friends]
-                .filter((person, index, list) => list.findIndex((item) => item.id === person.id) === index)
-                .map((person) => (
-                  <button
-                    type="button"
-                    key={person.id}
-                    className={selection.profileUsername === person.username ? 'list-card active' : 'list-card'}
-                    onClick={() => openProfile(person)}
-                  >
-                    <Avatar label={person.displayName} imageUrl={person.avatarImage} />
-                    <span>
-                      {person.displayName}
-                      <strong>@{person.username}</strong>
-                    </span>
-                  </button>
-                ))}
-            </div>
-          ) : null}
         </aside>
 
         <main className="main-pane">
@@ -1257,8 +1392,8 @@ function App() {
                         : 'Standard channel posting permissions.'
                       : selection.messageMode === 'groups'
                         ? `${currentGroup?.members.length ?? 0}/10 members`
-                        : `Direct messages with @${currentDm?.member.username}`}
-                  </p>
+                        : null}
+                    </p>
                 </div>
                 <div className="header-chips">
                   {selection.section === 'servers' ? <span>{currentServer?.name}</span> : null}
@@ -1346,19 +1481,6 @@ function App() {
             </section>
           ) : null}
 
-          {selection.section === 'profile' ? (
-            <ProfileCard
-              profile={viewedProfile ?? snapshot.user}
-              isSelf={(viewedProfile ?? snapshot.user).id === snapshot.user.id}
-              bioDraft={bioDraft}
-              onBioDraftChange={setBioDraft}
-              onBioSave={handleSaveBio}
-              settingsDraft={settingsDraft}
-              onSettingsChange={(field, value) => setSettingsDraft((current) => ({ ...current, [field]: value }))}
-              onSettingsSave={handleSaveSettings}
-              onSettingsAvatarUpload={handleSettingsAvatarUpload}
-            />
-          ) : null}
         </main>
 
         <aside className="member-pane">
@@ -1375,26 +1497,151 @@ function App() {
                 </span>
               </button>
             ))}
-            {!currentMembers.length ? <p className="empty-state">No members to show here.</p> : null}
+            {!currentMembers.length ? <p className="empty-state">No members.</p> : null}
           </div>
         </aside>
+        <button
+          type="button"
+          className="bottom-profile-panel"
+          onClick={() => openSettings('profile')}
+          aria-label="Open settings"
+        >
+          <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} />
+          <span className="bottom-profile-content">
+            <strong>{snapshot.user.displayName}</strong>
+            <span>@{snapshot.user.username}</span>
+          </span>
+          <span
+            className="settings-toggle-button"
+            role="button"
+            tabIndex={0}
+            aria-label="Open settings"
+            onClick={(event) => {
+              event.stopPropagation()
+              openSettings('profile')
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                event.stopPropagation()
+                openSettings('profile')
+              }
+            }}
+          >
+            <svg viewBox="0 0 24 24" focusable="false">
+              <path
+                d="M19.14 12.94c.04-.31.06-.63.06-.94s-.02-.63-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.07 7.07 0 0 0-1.63-.94l-.36-2.54A.5.5 0 0 0 13.9 2h-3.8a.5.5 0 0 0-.49.42l-.36 2.54c-.58.23-1.13.54-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.48a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.4 1.05.71 1.63.94l.36 2.54a.5.5 0 0 0 .49.42h3.8a.5.5 0 0 0 .49-.42l.36-2.54c.58-.23 1.13-.54 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58ZM12 15.5A3.5 3.5 0 1 1 12 8.5a3.5 3.5 0 0 1 0 7Z"
+                fill="currentColor"
+              />
+            </svg>
+          </span>
+        </button>
       </div>
 
-      
+      {isSettingsOpen
+        ? renderModal(
+            <section className="settings-modal-shell">
+              <header className="settings-modal-header">
+                <h2>Settings</h2>
+                {isSettingsDirty ? <span className="settings-warning">Unsaved changes</span> : null}
+              </header>
 
-      <button
-        type="button"
-        className="bottom-profile-panel"
-        onClick={() => openProfile(snapshot.user)}
-        aria-label="Open your profile page"
-      >
-        <Avatar label={snapshot.user.displayName} imageUrl={snapshot.user.avatarImage} />
-        <span className="bottom-profile-content">
-          <strong>{snapshot.user.displayName}</strong>
-          <span>@{snapshot.user.username}</span>
-        </span>
-        <span className="bottom-profile-action">Edit profile</span>
-      </button>
+              <nav className="settings-subtabs" aria-label="Settings sections">
+                <button
+                  type="button"
+                  className={settingsTab === 'profile' ? 'active' : ''}
+                  onClick={() => setSettingsTab('profile')}
+                >
+                  Profile
+                </button>
+                <button
+                  type="button"
+                  className={settingsTab === 'appearance' ? 'active' : ''}
+                  onClick={() => setSettingsTab('appearance')}
+                >
+                  Appearance
+                </button>
+              </nav>
+
+              {settingsTab === 'profile' ? (
+                <ProfileCard
+                  profile={snapshot.user}
+                  isSelf={true}
+                  bioDraft={bioDraft}
+                  onBioDraftChange={setBioDraft}
+                  onBioSave={handleSaveBio}
+                  settingsDraft={settingsDraft}
+                  onSettingsChange={(field, value) => setSettingsDraft((current) => ({ ...current, [field]: value }))}
+                  onSettingsSave={handleSaveSettings}
+                  onSettingsAvatarUpload={handleSettingsAvatarUpload}
+                />
+              ) : (
+                <form className="stack-form settings-appearance-form" onSubmit={handleSaveAppearance}>
+                  <div className="section-heading">
+                    <h3>Appearance</h3>
+                    <span>Customize your local visual theme</span>
+                  </div>
+
+                  <div className="appearance-preset-row" role="group" aria-label="Appearance presets">
+                    <button
+                      type="button"
+                      className={appearanceDraft.mode === 'dark' ? 'active' : ''}
+                      onClick={() => applyAppearancePreset('dark')}
+                    >
+                      Dark
+                    </button>
+                    <button
+                      type="button"
+                      className={appearanceDraft.mode === 'light' ? 'active' : ''}
+                      onClick={() => applyAppearancePreset('light')}
+                    >
+                      Light
+                    </button>
+                    <button
+                      type="button"
+                      className={appearanceDraft.mode === 'system' ? 'active' : ''}
+                      onClick={() => applyAppearancePreset('system')}
+                    >
+                      System
+                    </button>
+                  </div>
+
+                  <label>
+                    Background color
+                    <input
+                      type="color"
+                      value={appearanceDraft.background}
+                      disabled={appearanceDraft.mode === 'system'}
+                      onChange={(event) =>
+                        setAppearanceDraft((current) => ({ ...current, background: event.target.value }))
+                      }
+                    />
+                  </label>
+
+                  <label>
+                    Accent color
+                    <input
+                      type="color"
+                      value={appearanceDraft.accent}
+                      disabled={appearanceDraft.mode === 'system'}
+                      onChange={(event) => setAppearanceDraft((current) => ({ ...current, accent: event.target.value }))}
+                    />
+                  </label>
+
+                  <button type="submit">Save appearance</button>
+                </form>
+              )}
+
+              <div className="modal-actions settings-modal-actions">
+                <button type="button" className="ghost" onClick={requestCloseSettings}>
+                  Close
+                </button>
+              </div>
+            </section>,
+            requestCloseSettings,
+            'modal-panel settings-modal-panel',
+          )
+        : null}
 
       {isChannelCreateOpen
         ? renderModal(
