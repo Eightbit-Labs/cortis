@@ -10,15 +10,49 @@ const CLIENT_ORIGIN = process.env.CLIENT_ORIGIN || '*'
 const AVATAR_KEYS = ['amber-fox', 'teal-crane', 'rose-koi', 'ink-wolf', 'lime-gecko', 'sunset-moth']
 const app = express()
 const server = http.createServer(app)
-const allowedOrigins = CLIENT_ORIGIN === '*' ? true : CLIENT_ORIGIN.split(',').map((item) => item.trim())
-const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST', 'PATCH'],
+
+function normalizeOrigin(value) {
+  return String(value || '')
+    .trim()
+    .replace(/\/+$/, '')
+}
+
+const allowedOriginValues = CLIENT_ORIGIN.split(',')
+  .map((item) => normalizeOrigin(item))
+  .filter(Boolean)
+const allowAllOrigins = allowedOriginValues.includes('*') || allowedOriginValues.length === 0
+
+function isAllowedOrigin(origin) {
+  if (!origin) {
+    return true
+  }
+
+  if (allowAllOrigins) {
+    return true
+  }
+
+  const normalized = normalizeOrigin(origin)
+  return allowedOriginValues.includes(normalized)
+}
+
+const corsOptions = {
+  origin(origin, callback) {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true)
+      return
+    }
+
+    callback(null, false)
   },
+  methods: ['GET', 'POST', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}
+
+const io = new Server(server, {
+  cors: corsOptions,
 })
 
-app.use(cors({ origin: allowedOrigins }))
+app.use(cors(corsOptions))
 app.use(express.json())
 
 const socketsByUser = new Map()
