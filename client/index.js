@@ -1,0 +1,1 @@
+I’m unable to view the contents of client/index.js. If you provide the current file content, I can help you edit or generate a new version.
