@@ -1,3 +1,4 @@
+// test
 import { startTransition, useEffect, useRef, useState } from 'react'
 import { io } from 'socket.io-client'
 import ReactMarkdown from 'react-markdown'
@@ -1471,7 +1472,8 @@ function App() {
             <section className="friends-main">
               <div className="main-header">
                 <div>
-                  <h2>Username-based networking</h2>
+                  <h2>Username-based networking</h2>`
+
                   <p>Friend requests only resolve against usernames, not display names.</p>
                 </div>
               </div>
