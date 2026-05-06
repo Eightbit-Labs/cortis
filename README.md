@@ -1,106 +1,105 @@
-# Cortis
+# Cortis Chat Application
 
-Cortis is a full-stack messaging app made for students and developers. <br>
-Logo design: [Nathaniel Shou](https://github.com/MrDragon0011)
+Welcome to **Cortis**, a real‑time chat app built with Node.js, Socket.io, and React. This repository contains the server and client code, setup instructions, and usage examples.
 
-## Tech Stack
+## Table of Contents
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Running the App](#running-the-app)
+- [Project Structure](#project-structure)
+- [API Overview](#api-overview)
+- [Testing](#testing)
+- [Contributing](#contributing)
+- [License](#license)
 
-- Frontend: React + Vite
-- Backend: Node.js + Express + Socket.IO + Render
-
-## Project Structure
-
-```text
-cortis/
-	client/   # React app 
-	server/   # Express + Socket.IO + Render API
-	README.md
-```
+## Features
+- Real‑time messaging with Socket.io
+- Username and password authentication (session tracked by user ID)
+- In‑memory data store — state is seeded on startup and resets when the server restarts
+- Direct messages, group chats, and servers with named channels
+- Unread message indicators and friend‑request system
+- Light and dark theme support
 
 ## Prerequisites
+- **Node.js** >= 18.x
+- **npm** or **yarn**
+- **Git**
 
-- Node.js 20+ recommended
-- npm 10+ recommended
-
-## Quick Start
-
-1. Install client dependencies:
-
+## Installation
 ```bash
-cd client
+# Clone the repository
+git clone https://github.com/eightbitlabs/cortis.git
+cd cortis
+
+# Install server dependencies
+cd server
 npm install
-```
 
-2. Install server dependencies:
-
-```bash
-cd ../server
-npm install
-```
-
-3. Start the server:
-
-```bash
-npm run dev
-```
-
-4. In a new terminal, start the client:
-
-```bash
+# Install client dependencies
 cd ../client
+npm install
+```
+
+## Running the App
+### Development Mode
+```bash
+# In one terminal, start the server
+cd server
+npm run dev
+
+# In another terminal, start the React client
+cd client
 npm run dev
 ```
+The client will be available at `http://localhost:5173` and connects to the server at `http://localhost:3001`.
 
-5. Open the URL printed by Vite (usually http://localhost:5173).
+### Production Build
+```bash
+# Build the client
+cd client
+npm run build
 
-## Environment Variables
+# Start the API and Socket.io server
+cd ../server
+npm start
+```
+The server handles API and Socket.io connections. Serve `client/dist` separately (e.g. via a static file host or CDN).
 
-### Server
-
-Copy server/.env.example to server/.env and edit values as needed:
-
-```env
-PORT=3001
-CLIENT_ORIGIN=http://localhost:5173
+## Project Structure
+```
+├── server/                 # Express + Socket.io backend
+│   ├── index.js            # Server entrypoint (all routes and socket handlers)
+│   └── package.json
+├── client/                 # React front‑end (Vite)
+│   ├── src/
+│   │   ├── App.jsx         # Root component and routing
+│   │   ├── App.css         # Component styles
+│   │   ├── main.jsx        # Vite entry
+│   │   ├── index.css       # Global styles
+│   │   └── assets/         # Static assets
+│   └── package.json
+├── .gitignore
+└── README.md               # Documentation (this file)
 ```
 
-### Client (optional)
+## API Overview
+- **POST** `/api/auth/signup` – Register a new user
+- **POST** `/api/auth/login` – Authenticate and receive a session object
+- **GET** `/api/public/users` – List public user profiles
 
-If your API runs on a different host/port, create client/.env.local:
+Socket.io handles all real‑time events (messages, friend requests, server invites). HTTP routes identify the acting user via `userId` in the request body or query string.
 
-```env
-VITE_API_URL=http://localhost:3001
-VITE_SOCKET_URL=http://localhost:3001
-```
+## Testing
+There are no automated test suites configured at this time. Manual testing can be done by running both the server and client in development mode and exercising the UI.
 
-## Scripts
+## Contributing
+1. Fork the repo
+2. Create a feature branch (`git checkout -b feature/awesome-feature`)
+3. Commit your changes with clear messages
+4. Open a Pull Request against the `prod` branch
 
-### Client
-
-- npm run dev: start Vite dev server
-- npm run build: production build
-- npm run lint: lint React code
-- npm run preview: preview production build
-
-### Server
-
-- npm run dev: start API with nodemon
-- npm start: start API with Node
-
-## Current Storage Behavior
-
-The server currently stores users, rooms, requests, and messages in memory.
-
-- data resets whenever the server restarts
-- great for local UI iteration and feature validation
-- not suitable for production persistence
-
-## Security and Production Notes
-
-- This project currently has no real auth/password system
-- Input validation and authorization are basic and demo-oriented
-- Add proper auth, rate-limiting, persistent storage, and hardened validation before production use
+Please ensure linting passes and write unit tests for new functionality.
 
 ## License
-
-MIT License
+Distributed under the ISC License. See `server/package.json` for details.
