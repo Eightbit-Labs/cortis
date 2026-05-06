@@ -69,15 +69,12 @@ The production server will serve the built React app and handle Socket.io connec
 ## Project Structure
 ```
 ├── server/                 # Express + Socket.io backend
-│   ├── src/                # Source code
-│   │   ├── routes/         # REST API routes
-│   │   ├── sockets/        # Socket.io event handlers
-│   │   └── ...
+│   ├── index.js            # Server entrypoint
 │   └── package.json
 ├── client/                 # React front‑end
 │   ├── src/                # Source code
-│   │   ├── components/    # UI components
-│   │   ├── pages/         # Page views
+│   │   ├── components/     # UI components
+│   │   ├── pages/          # Page views
 │   │   └── ...
 │   └── package.json
 ├── .gitignore
