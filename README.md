@@ -15,15 +15,15 @@ Welcome to **Cortis**, a real‑time chat app built with Node.js, Socket.io, and
 
 ## Features
 - Real‑time messaging with Socket.io
-- User authentication (JWT based)
-- Persistent chat history stored in MongoDB
-- Typing indicators and read receipts
-- Responsive UI built with React and Tailwind CSS
+- Username and password authentication (session tracked by user ID)
+- In‑memory data store — state is seeded on startup and resets when the server restarts
+- Direct messages, group chats, and servers with named channels
+- Unread message indicators and friend‑request system
+- Light and dark theme support
 
 ## Prerequisites
 - **Node.js** >= 18.x
 - **npm** or **yarn**
-- **MongoDB** instance (local or Atlas)
 - **Git**
 
 ## Installation
@@ -50,9 +50,9 @@ npm run dev
 
 # In another terminal, start the React client
 cd client
-npm start
+npm run dev
 ```
-The client will be available at `http://localhost:3000` and will proxy API calls to the server at `http://localhost:5000`.
+The client will be available at `http://localhost:5173` and connects to the server at `http://localhost:3001`.
 
 ### Production Build
 ```bash
@@ -60,46 +60,38 @@ The client will be available at `http://localhost:3000` and will proxy API calls
 cd client
 npm run build
 
-# Serve the static files via the Express server
+# Start the API and Socket.io server
 cd ../server
 npm start
 ```
-The production server will serve the built React app and handle Socket.io connections.
+The server handles API and Socket.io connections. Serve `client/dist` separately (e.g. via a static file host or CDN).
 
 ## Project Structure
 ```
 ├── server/                 # Express + Socket.io backend
-│   ├── index.js            # Server entrypoint
+│   ├── index.js            # Server entrypoint (all routes and socket handlers)
 │   └── package.json
-├── client/                 # React front‑end
-│   ├── src/                # Source code
-│   │   ├── components/     # UI components
-│   │   ├── pages/          # Page views
-│   │   └── ...
+├── client/                 # React front‑end (Vite)
+│   ├── src/
+│   │   ├── App.jsx         # Root component and routing
+│   │   ├── App.css         # Component styles
+│   │   ├── main.jsx        # Vite entry
+│   │   ├── index.css       # Global styles
+│   │   └── assets/         # Static assets
 │   └── package.json
 ├── .gitignore
-├── README.md               # Documentation (this file)
-└── LICENSE
+└── README.md               # Documentation (this file)
 ```
 
 ## API Overview
-- **POST** `/api/auth/register` – Register a new user
-- **POST** `/api/auth/login` – Authenticate and receive a JWT
-- **GET** `/api/messages` – Retrieve recent chat messages (protected)
-- **POST** `/api/messages` – Send a new message (protected)
+- **POST** `/api/auth/signup` – Register a new user
+- **POST** `/api/auth/login` – Authenticate and receive a session object
+- **GET** `/api/public/users` – List public user profiles
 
-All protected routes require an `Authorization: Bearer <token>` header.
+Socket.io handles all real‑time events (messages, friend requests, server invites). HTTP routes identify the acting user via `userId` in the request body or query string.
 
 ## Testing
-```bash
-# Run backend tests
-cd server
-npm test
-
-# Run frontend tests
-cd ../client
-npm test
-```
+There are no automated test suites configured at this time. Manual testing can be done by running both the server and client in development mode and exercising the UI.
 
 ## Contributing
 1. Fork the repo
@@ -110,4 +102,4 @@ npm test
 Please ensure linting passes and write unit tests for new functionality.
 
 ## License
-Distributed under the MIT License. See `LICENSE` for more information.
+Distributed under the ISC License. See `server/package.json` for details.
