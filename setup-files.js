@@ -65,7 +65,7 @@ else
 fi
 echo ""`;
 
-fs.writeFileSync(path.join(huskyDir, 'post-commit'), postCommitContent, 'utf8');
+fs.writeFileSync(path.join(huskyDir, 'post-commit'), postCommitContent, { encoding: 'utf8', mode: 0o755 });
 console.log('✅ Created .husky/post-commit');
 
 // Create scripts/check-secrets.js
