@@ -1,4 +1,4 @@
 @echo off
-cd /d "c:\Users\Lawrence Tong\Desktop\Projects\cortis.worktrees\agents-automate-security-checks-on-commit"
-node setup-files.js
+cd /d "%~dp0"
+node "%~dp0setup-files.js"
 pause
