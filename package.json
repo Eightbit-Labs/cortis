@@ -1,0 +1,12 @@
+{
+  "name": "cortis",
+  "version": "1.0.0",
+  "description": "Cortis monorepo root — manages dev tooling and git hooks",
+  "private": true,
+  "scripts": {
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
+  }
+}

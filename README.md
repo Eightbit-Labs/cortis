@@ -24,8 +24,12 @@ The app includes:
 
 ```text
 cortis/
-	client/   # React app (Vite)
-	server/   # Express + Socket.IO API
+	client/           # React app (Vite)
+	server/           # Express + Socket.IO API
+	scripts/          # Dev tooling scripts
+	  check-secrets.js  # Post-commit secret scanner
+	.husky/           # Git hooks (managed by Husky)
+	  post-commit     # Runs security checks after each commit
 	README.md
 ```
 
@@ -36,34 +40,40 @@ cortis/
 
 ## Quick Start
 
-1. Install client dependencies:
+1. Install root dev tools (Husky git hooks):
+
+```bash
+npm install
+```
+
+2. Install client dependencies:
 
 ```bash
 cd client
 npm install
 ```
 
-2. Install server dependencies:
+3. Install server dependencies:
 
 ```bash
 cd ../server
 npm install
 ```
 
-3. Start the server:
+4. Start the server:
 
 ```bash
 npm run dev
 ```
 
-4. In a new terminal, start the client:
+5. In a new terminal, start the client:
 
 ```bash
 cd ../client
 npm run dev
 ```
 
-5. Open the URL printed by Vite (usually http://localhost:5173).
+6. Open the URL printed by Vite (usually http://localhost:5173).
 
 ## Environment Variables
 
@@ -118,6 +128,26 @@ Typical next steps:
 1. Provision MongoDB (local or Atlas)
 2. Add MONGODB_URI to server/.env
 3. Replace the in-memory state module in server/index.js with a database adapter
+
+## Security Checks
+
+A `post-commit` git hook (managed by [Husky](https://typicode.github.io/husky/)) runs two automated security checks after every commit:
+
+1. **Dependency audit** — `npm audit --audit-level=moderate` across both `client/` and `server/`
+2. **Secret scan** — scans the committed diff for hardcoded credentials (private keys, API tokens, passwords, connection strings, etc.)
+
+Hooks are installed automatically when you run `npm install` at the root (via the `prepare` script).
+
+If a check fails, the commit is still recorded but a warning is printed so you can remediate before pushing.
+
+### Checks that are detected
+
+| Pattern | Examples |
+|---|---|
+| Private keys | `-----BEGIN RSA PRIVATE KEY-----` |
+| Hardcoded credentials | `apiKey="abc123..."`, `password='hunter2'` |
+| Connection strings | `mongodb://user:pass@host/db` |
+| Platform tokens | GitHub PATs, Stripe keys, SendGrid keys, Twilio |
 
 ## Security and Production Notes
 

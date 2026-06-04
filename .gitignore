@@ -51,3 +51,6 @@ Thumbs.db
 
 # Optional tool outputs
 *.tsbuildinfo
+
+# Local scratch file
+client/.husky-test
