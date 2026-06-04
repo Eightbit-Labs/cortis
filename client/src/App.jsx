@@ -195,7 +195,7 @@ function ProfileCard({
   onSettingsSave,
   onSettingsAvatarUpload,
 }) {
-  return (
+  return ( //profile settings page
     <section className="profile-card">
       <div className="profile-hero">
         <Avatar label={profile.displayName} imageUrl={profile.avatarImage} size="xl" />
@@ -231,7 +231,7 @@ function ProfileCard({
           <form className="bio-editor" onSubmit={onSettingsSave}>
             <div className="section-heading">
               <h3>Account settings</h3>
-              <span>Update your profile and login credentials</span>
+              
             </div>
             <label>
               Display name
@@ -268,12 +268,15 @@ function ProfileCard({
             </label>
             <Avatar label={settingsDraft.displayName || settingsDraft.username} imageUrl={settingsDraft.avatarImage} />
             <button type="submit">Save settings</button>
+            <button type="button" onClick={onLogout} >Log Out</button>
           </form>
         </>
       ) : null}
     </section>
   )
 }
+
+
 
 function AuthScreen({
   authError,
@@ -290,7 +293,7 @@ function AuthScreen({
   onLoginSubmit,
   onQuickLogin,
 }) {
-  return (
+  return ( //home page
     <div className="auth-screen">
       <section className="auth-hero">
         <div className="hero-panel">
@@ -412,6 +415,14 @@ function AuthScreen({
 }
 
 function App() {
+    function onLogout() {
+      applySession(null, null)
+      setSelection(EMPTY_SELECTION)
+      setLoginUsername('')
+      setLoginPassword('')
+      setFlash('Logged out.')
+      // No redirect: session is now null, so the auth screen will be shown
+    }
   const [authError, setAuthError] = useState('')
   const [session, setSession] = useState(() => {
     const saved = window.localStorage.getItem(SESSION_KEY)
@@ -983,6 +994,7 @@ function App() {
     setLoginUsername('')
     setLoginPassword('')
     setFlash('Logged out.')
+    // No redirect: session is now null, so the auth screen will be shown
   }
 
   function openSettings(tab = 'profile') {
@@ -1596,6 +1608,7 @@ function App() {
                   onSettingsChange={(field, value) => setSettingsDraft((current) => ({ ...current, [field]: value }))}
                   onSettingsSave={handleSaveSettings}
                   onSettingsAvatarUpload={handleSettingsAvatarUpload}
+                  onLogout={onLogout}
                 />
               ) : (
                 <form className="stack-form settings-appearance-form" onSubmit={handleSaveAppearance}>
