@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const baseDir = 'c:\\Users\\Lawrence Tong\\Desktop\\Projects\\cortis.worktrees\\agents-automate-security-checks-on-commit';
+const baseDir = path.resolve(__dirname);
 
 // Create directories
 const huskyDir = path.join(baseDir, '.husky');
